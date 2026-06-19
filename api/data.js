@@ -19,13 +19,30 @@ const OPS_POS = {
   'ผู้ช่วยทีม': 'assistant',
   'ม้าเร็ว': 'rider',
   'สาวบาวแดง': 'sales',
+  'สาวบาวเบียร์': 'sales', // synonym used interchangeably with สาวบาวแดง across sheets
 };
 const LEADER_MAIN = 'หัวหน้าทีมเชียร์';
 const LEADER_BACKUP = 'ทลต.หัวหน้าทีมเชียร์';
 const DEPUTY_MAIN = 'รองผู้จัดการ Operation';
 const DEPUTY_BACKUP = 'ทลต.รองผู้จัดการ Operation';
-const POS_MAP_PIPE = { 'สาวบาวเบียร์': 'sales', 'ม้าเร็ว': 'rider', 'ผู้ช่วยทีม': 'assistant' };
+const POS_MAP_PIPE = {
+  'สาวบาวเบียร์': 'sales',
+  'สาวบาวแดง': 'sales', // synonym used interchangeably with สาวบาวเบียร์ across sheets
+  'ม้าเร็ว': 'rider',
+  'ผู้ช่วยทีม': 'assistant',
+};
 const TRAIN_SUBS = new Set(['ระหว่างฝึกงาน', 'ต่อฝึกงาน']);
+
+// Canonical display label used everywhere a position name is shown to the user
+// (the "sales" role is recorded under two different spellings across the two
+// sheets — SBB uses "สาวบาวแดง", ฝึกงาน uses "สาวบาวเบียร์" — so we normalize
+// to a single label here to keep filters / pivot tables / position summaries
+// from silently splitting into two separate rows).
+const SALES_LABEL_CANONICAL = 'สาวบาวแดง';
+function normalizePositionLabel(p) {
+  if (p === 'สาวบาวเบียร์' || p === 'สาวบาวแดง') return SALES_LABEL_CANONICAL;
+  return p;
+}
 
 function csvUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
@@ -185,7 +202,7 @@ function buildData(requiredRows, sbbRows, pipeRows) {
     pipeRowsParsed.push({
       date: parsedDate.iso,
       name: cell(row, 1) || '',
-      position: cell(row, 2),
+      position: normalizePositionLabel(cell(row, 2)),
       team: cell(row, 3),
       status,
       sub: cell(row, 5),
@@ -212,13 +229,19 @@ function buildData(requiredRows, sbbRows, pipeRows) {
     teamTraining[c.team] = { assistant: 0, rider: 0, sales: 0 };
   });
   const newZoneTraining = {}; // team -> {assistant,rider,sales}
+  const newZonePending = {}; // team -> {assistant,rider,sales}
 
   pipeRowsParsed.forEach((r) => {
     const bucket = POS_MAP_PIPE[r.position] || 'other';
     const team = r.team;
     const inCanon = canonicalTeamNames.has(team);
     if (r.status === 'รอเข้ามารายงานตัว') {
-      if (inCanon && bucket !== 'other') teamPending[team][bucket] += 1;
+      if (inCanon) {
+        if (bucket !== 'other') teamPending[team][bucket] += 1;
+      } else if (team) {
+        if (!newZonePending[team]) newZonePending[team] = { assistant: 0, rider: 0, sales: 0 };
+        if (bucket !== 'other') newZonePending[team][bucket] += 1;
+      }
     } else if (r.status === 'มารายงานตัว' && (TRAIN_SUBS.has(r.sub) || r.sub === null)) {
       if (inCanon) {
         if (bucket !== 'other') teamTraining[team][bucket] += 1;
@@ -268,16 +291,25 @@ function buildData(requiredRows, sbbRows, pipeRows) {
 
   const regionsList = regionOrder.map((r) => ({ bigregion: r, teams: regionsMap[r] }));
 
+  const newZoneTeamNames = new Set([...Object.keys(newZoneTraining), ...Object.keys(newZonePending)]);
   const newZonesGrouped = {};
-  Object.entries(newZoneTraining).forEach(([team, counts]) => {
+  newZoneTeamNames.forEach((team) => {
+    const train = newZoneTraining[team] || { assistant: 0, rider: 0, sales: 0 };
+    const pend = newZonePending[team] || { assistant: 0, rider: 0, sales: 0 };
     const br = regionToBigregionFallback(team);
     if (!newZonesGrouped[br]) newZonesGrouped[br] = [];
-    const total = counts.assistant + counts.rider + counts.sales;
-    newZonesGrouped[br].push({ team, assistant: counts.assistant, rider: counts.rider, sales: counts.sales, training_total: total });
+    const trainingTotal = train.assistant + train.rider + train.sales;
+    const pendingTotal = pend.assistant + pend.rider + pend.sales;
+    newZonesGrouped[br].push({
+      team,
+      assistant: train.assistant, rider: train.rider, sales: train.sales, training_total: trainingTotal,
+      p_assistant: pend.assistant, p_rider: pend.rider, p_sales: pend.sales, pending_total: pendingTotal,
+      grand_total: trainingTotal + pendingTotal,
+    });
   });
   const newZonesList = Object.entries(newZonesGrouped).map(([bigregion, teams]) => ({
     bigregion,
-    teams: teams.sort((a, b) => b.training_total - a.training_total),
+    teams: teams.sort((a, b) => b.grand_total - a.grand_total),
   }));
 
   const funnel = {

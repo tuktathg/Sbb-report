@@ -5,6 +5,6 @@
   "description": "SBB field-force manpower & daily recruitment dashboard, backed live by Google Sheets, deployed on Vercel.",
   "type": "module",
   "dependencies": {
-    "papaparse": "^5.5.3"
+    "papaparse": "^5.5.4"
   }
 }

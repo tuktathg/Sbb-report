@@ -650,16 +650,20 @@ function renderFunnel(){
 }
 function renderNewZones(){
   if(!NEW_ZONES || NEW_ZONES.length===0) return;
-  const totalPeople = NEW_ZONES.reduce((s,b)=>s+b.teams.reduce((s2,t)=>s2+t.training_total,0),0);
+  const totalPeople = NEW_ZONES.reduce((s,b)=>s+b.teams.reduce((s2,t)=>s2+(t.grand_total!==undefined?t.grand_total:t.training_total),0),0);
   const totalTeams = NEW_ZONES.reduce((s,b)=>s+b.teams.length,0);
   if(totalTeams===0) return;
   document.getElementById('newZoneSection').style.display='';
-  document.getElementById('newZoneSummary').textContent = `${totalTeams} ทีม / ${totalPeople} คน อยู่ระหว่างฝึกงานในทีมที่ยังไม่อยู่ใน "กำลังพลที่ต้องการ"`;
+  document.getElementById('newZoneSummary').textContent = `${totalTeams} ทีม / ${totalPeople} คน (รอเข้ารายงานตัว + ฝึกงาน) ในทีมที่ยังไม่อยู่ใน "กำลังพลที่ต้องการ"`;
   document.getElementById('newZoneBody').innerHTML = NEW_ZONES.map(b=>`
     <div class="nz-region"><h4>${b.bigregion} (${b.teams.length} ทีม)</h4>
-    <div class="nz-grid">${b.teams.map(t=>`
-      <div class="nz-card"><div class="nzname">${t.team}</div><div class="nzcount">${t.training_total} คน</div>
-      <div class="nzbreak">สาวบาวแดง ${t.sales} · ม้าเร็ว ${t.rider} · ผู้ช่วยทีม ${t.assistant}</div></div>`).join('')}</div></div>`).join('');
+    <div class="nz-grid">${b.teams.map(t=>{
+      const grand = t.grand_total!==undefined ? t.grand_total : t.training_total;
+      const pTotal = t.pending_total||0, tTotal = t.training_total||0;
+      return `<div class="nz-card"><div class="nzname">${t.team}</div><div class="nzcount">${grand} คน</div>
+      <div class="nzbreak">รอเข้ารายงานตัว ${pTotal} · ฝึกงาน ${tTotal}</div>
+      <div class="nzbreak">สาวบาวแดง ${(t.sales||0)+(t.p_sales||0)} · ม้าเร็ว ${(t.rider||0)+(t.p_rider||0)} · ผู้ช่วยทีม ${(t.assistant||0)+(t.p_assistant||0)}</div></div>`;
+    }).join('')}</div></div>`).join('');
 }
 
 document.getElementById('resetAllBtn').addEventListener('click', resetAllTargets);
