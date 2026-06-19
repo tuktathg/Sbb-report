@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBB Manpower &amp; Daily Recruitment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#11192e; --navy-2:#1a2440;
+  --cream:#f6f3ec; --cream-2:#ece7da;
+  --ink:#1c2030; --paper:#ffffff; --line:#e3ddcd;
+  --gold:#c98a2c; --gold-soft:#f0d9ad;
+  --red:#b8473a; --red-soft:#f6dcd6;
+  --amber:#d39a2d; --amber-soft:#f7e8c8;
+  --green:#3f7a52; --green-soft:#dcebdf;
+  --sky:#3d7ea6; --sky-soft:#dceaf1;
+  --slate:#5c5c9e; --slate-soft:#e3e1f0;
+  --muted:#7c7768;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--cream); color:var(--ink); font-family:'IBM Plex Sans Thai', sans-serif; font-size:14px; line-height:1.5;}
+.num{font-family:'Space Grotesk','IBM Plex Sans Thai',sans-serif;}
+
+/* ===== Top bar with tabs ===== */
+.topbar{background:linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%); color:#f3efe3; padding:20px 28px 0; position:relative; overflow:hidden;}
+.topbar::before{content:""; position:absolute; top:-60px; right:-60px; width:280px; height:280px; background:radial-gradient(circle, rgba(201,138,44,0.18), transparent 70%);}
+.topbar-inner{position:relative; z-index:1;}
+.eyebrow{text-transform:uppercase; letter-spacing:.12em; font-size:11px; font-weight:600; color:var(--gold-soft); margin:0 0 4px;}
+.topbar h1{font-family:'Space Grotesk', sans-serif; font-size:clamp(19px,3vw,27px); margin:0 0 14px; font-weight:600; letter-spacing:-.01em;}
+.tabs{display:flex; gap:4px; flex-wrap:wrap;}
+.tab-btn{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#c7c2b1; padding:10px 20px; border-radius:8px 8px 0 0; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit;}
+.tab-btn.active{background:var(--cream); color:var(--ink); border-bottom:none;}
+.refresh-btn{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#c7c2b1; padding:10px 16px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; margin-left:auto;}
+.refresh-btn:hover{background:rgba(255,255,255,0.12); color:#f3efe3;}
+.refresh-btn:disabled{opacity:.5; cursor:default;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+/* ===== KPI / funnel shared ===== */
+.kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; padding:20px 28px; background:var(--navy-2);}
+.kpi-row.kpi-row-6{grid-template-columns:repeat(6,1fr);}
+.kpi{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:10px; padding:12px 16px;}
+.kpi .v{font-size:24px; font-weight:600; font-family:'Space Grotesk',sans-serif; color:#f3efe3;}
+.kpi .l{font-size:11px; color:#a8a395; margin-top:2px;}
+.kpi .v.warn{color:#e8b659;} .kpi .v.bad{color:#e08070;} .kpi .v.good{color:#7fc99a;}
+
+.funnel-strip{background:var(--paper); border-bottom:1px solid var(--line); padding:12px 28px; display:flex; flex-wrap:wrap;}
+.funnel-item{flex:1; min-width:150px; padding:4px 22px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:2px;}
+.funnel-item:last-child{border-right:none;}
+.funnel-item .fv{font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700;}
+.funnel-item .fl{font-size:11px; color:var(--muted);}
+.fv.sky{color:var(--sky);} .fv.slate{color:var(--slate);} .fv.red{color:var(--red);} .fv.ink{color:var(--ink);} .fv.green{color:var(--green);}
+
+.controls{background:var(--paper); border-bottom:1px solid var(--line); padding:12px 28px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:40;}
+.field{display:flex; align-items:center; gap:8px;}
+.field label{font-size:12px; color:var(--muted); font-weight:500; white-space:nowrap;}
+.target-input{width:54px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px; text-align:center; background:var(--cream-2);}
+.search-box{flex:1; min-width:170px; max-width:260px; padding:7px 12px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:13px; background:var(--cream);}
+.search-box:focus, select:focus{outline:2px solid var(--gold); outline-offset:1px;}
+.chip-group{display:flex; gap:6px; flex-wrap:wrap;}
+.chip{padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:var(--paper); font-size:12px; cursor:pointer; color:var(--ink); font-weight:500;}
+.chip.active{background:var(--navy); color:#f3efe3; border-color:var(--navy);}
+.toggle-short{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); cursor:pointer; font-weight:500;}
+.toggle-short input{accent-color:var(--red);}
+.short-filter-group{display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;}
+.apply-btn, .reset-btn{padding:6px 11px; border-radius:7px; border:1px solid var(--line); background:var(--paper); font-size:12px; cursor:pointer; color:var(--ink); font-weight:500;}
+.apply-btn:hover, .reset-btn:hover{background:var(--cream-2);}
+.save-flash{font-size:11px; color:var(--green); opacity:0; transition:opacity .3s;}
+.save-flash.show{opacity:1;}
+select.fselect{padding:7px 10px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:12.5px; background:var(--paper); color:var(--ink);}
+.date-input{padding:6px 9px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:12.5px; background:var(--paper); color:var(--ink);}
+.date-sep{font-size:12px; color:var(--muted);}
+
+main{padding:20px 28px 10px; max-width:1500px; margin:0 auto;}
+
+/* ===== Page 1 table ===== */
+.region-block{margin-bottom:20px;}
+.region-head{display:flex; align-items:baseline; gap:14px; padding:10px 4px; border-bottom:2px solid var(--ink); cursor:pointer; flex-wrap:wrap;}
+.region-head h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0; font-weight:600;}
+.region-stats{font-size:12px; color:var(--muted); display:flex; gap:12px; margin-left:auto; align-items:baseline; flex-wrap:wrap;}
+.region-stats b{color:var(--ink); font-family:'Space Grotesk',sans-serif;}
+.region-fillbar{width:80px; height:6px; border-radius:3px; background:var(--line); overflow:hidden;}
+.region-fillbar > div{height:100%;}
+.caret{font-size:12px; color:var(--muted); transition:transform .15s;}
+.region-block.collapsed .caret{transform:rotate(-90deg);}
+.region-body{padding-top:10px;}
+.region-block.collapsed .region-body{display:none;}
+
+.table-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--paper);}
+table.roster{border-collapse:collapse; width:100%; min-width:1460px;}
+table.roster th, table.roster td{border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:7px 9px; font-size:12.5px;}
+table.roster th{font-weight:600; text-align:center; vertical-align:middle; white-space:nowrap;}
+table.roster td{text-align:center; vertical-align:middle;}
+table.roster tbody tr:hover{background:#fbf9f3;}
+table.roster tr.row-hide{display:none;}
+
+.grp-current th{background:var(--navy); color:#f3efe3;}
+.grp-pending th{background:var(--sky-soft); color:var(--sky);}
+.grp-training th{background:var(--slate-soft); color:var(--slate);}
+.sub-current th{background:#e7e3d6; color:var(--ink); font-size:11px;}
+.sub-pending th{background:#eef5f9; color:var(--sky); font-size:11px;}
+.sub-training th{background:#eeedf7; color:var(--slate); font-size:11px;}
+
+.col-team{position:sticky; left:0; z-index:5; background:var(--paper); min-width:170px; text-align:left !important;}
+.col-head{position:sticky; left:170px; z-index:5; background:var(--paper); min-width:150px; text-align:left !important;}
+thead .col-team, thead .col-head{background:var(--cream-2); z-index:6;}
+tbody tr:hover .col-team, tbody tr:hover .col-head{background:#fbf9f3;}
+
+.team-name{font-weight:600;}
+.head-name{color:var(--muted); font-size:11.5px;}
+.tot-current{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:3px 8px; border-radius:6px; display:inline-block;}
+.tot-pending{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--sky);}
+.tot-training{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--slate);}
+.tot-grand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:3px 8px; border-radius:6px; display:inline-block;}
+.zero{color:#c2bca8;}
+.sub-val{font-family:'Space Grotesk',sans-serif;}
+.status-red{background:var(--red-soft); color:var(--red);}
+.status-amber{background:var(--amber-soft); color:#9c6f1f;}
+.status-green{background:var(--green-soft); color:var(--green);}
+.target-cell{width:50px; padding:4px 5px; border:1px solid var(--line); border-radius:5px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; text-align:center; background:var(--paper);}
+.target-cell:focus{outline:2px solid var(--gold); outline-offset:1px; background:#fffbf0;}
+.zone-divider td{border-top:2px solid var(--ink);}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin:16px 4px 8px; font-size:11px; color:var(--muted); max-width:1500px; margin-left:auto; margin-right:auto; padding:0 28px;}
+.legend span{display:flex; align-items:center; gap:5px;}
+.legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+.empty-msg{padding:30px; text-align:center; color:var(--muted); font-size:13px;}
+
+/* ===== Page 3: Report ===== */
+.report-block{max-width:1000px; margin:0 auto 28px; padding:0 28px;}
+.report-h2{font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:600; margin:0 0 4px;}
+.report-sub{font-size:11.5px; color:var(--muted); margin:0 0 10px;}
+table.report-table{border-collapse:collapse; width:100%; background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+table.report-table th{background:var(--cream-2); font-weight:600; text-align:left; padding:8px 14px; font-size:12px; border-bottom:1px solid var(--line);}
+table.report-table td{padding:8px 14px; font-size:12.5px; border-bottom:1px solid var(--line);}
+table.report-table tbody tr:last-child td{border-bottom:none;}
+table.report-table tbody tr:hover{background:#fbf9f3;}
+table.report-table td.num-cell, table.report-table th.num-cell{text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700;}
+table.report-table tr.sev-red td.num-cell{color:var(--red);}
+table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
+
+.newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
+.newzone-toggle{display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px 16px; background:var(--slate-soft); border-radius:10px; border:1px solid #cfcbe6;}
+.newzone-toggle h3{margin:0; font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--slate); font-weight:600;}
+.newzone-toggle p{margin:2px 0 0; font-size:11.5px; color:#5c5c9e; opacity:.85;}
+.newzone-body{display:none; margin-top:10px;}
+.newzone-section.open .newzone-body{display:block;}
+.newzone-section.open .caret-nz{transform:rotate(90deg);}
+.caret-nz{margin-left:auto; transition:transform .15s; color:var(--slate);}
+.nz-region{margin-bottom:14px;}
+.nz-region h4{font-size:12.5px; margin:0 0 6px; color:var(--muted); font-weight:600;}
+.nz-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;}
+.nz-card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:9px 12px;}
+.nz-card .nzname{font-weight:600; font-size:12.5px;}
+.nz-card .nzcount{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--slate); font-size:14px;}
+.nz-card .nzbreak{font-size:10.5px; color:var(--muted); margin-top:3px;}
+
+footer{padding:20px 28px 40px; max-width:1500px; margin:0 auto; font-size:11.5px; color:var(--muted); border-top:1px solid var(--line);}
+footer p{margin:4px 0;}
+
+/* ===== Page 2: Daily ===== */
+.summary-wrap{padding:16px 28px 4px; max-width:1500px; margin:0 auto;}
+.summary-title{font-size:12px; color:var(--muted); margin-bottom:8px; font-weight:600;}
+.summary-hint{font-size:11px; color:var(--muted); margin-bottom:10px; opacity:.85;}
+table.owner-summary{border-collapse:collapse; width:100%; max-width:640px; background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+table.owner-summary th, table.owner-summary td{border:1px solid var(--line); padding:7px 14px; font-size:12.5px; text-align:center;}
+table.owner-summary th{background:var(--cream-2); font-weight:600;}
+table.owner-summary td:first-child, table.owner-summary th:first-child{text-align:left;}
+table.owner-summary tbody tr:hover{background:#fbf9f3;}
+table.owner-summary .sum-cell{font-family:'Space Grotesk',sans-serif; font-weight:700;}
+table.owner-summary .grand-row td{font-weight:700; background:var(--cream-2);}
+table.owner-summary .grand-row td:first-child{text-align:center;}
+table.owner-summary .pos-th, table.owner-summary .own-td, table.owner-summary .own-th{cursor:pointer; user-select:none;}
+table.owner-summary .pos-th:hover, table.owner-summary .own-td:hover, table.owner-summary .own-th:hover{background:var(--gold-soft);}
+table.owner-summary .pos-th.th-active{background:var(--navy); color:#f3efe3;}
+table.owner-summary .own-td.own-active{background:var(--navy); color:#f3efe3; font-weight:600;}
+
+.day-block{background:var(--paper); border:1px solid var(--line); border-radius:10px; margin-bottom:12px; overflow:hidden;}
+.day-block.row-hide{display:none;}
+.day-block.date-hide{display:none;}
+.day-head{display:flex; align-items:center; gap:14px; padding:11px 16px; cursor:pointer; background:var(--cream-2); flex-wrap:wrap;}
+.day-head .dlabel{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px;}
+.day-head .dsub{font-size:11.5px; color:var(--muted);}
+.day-badges{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap;}
+.day-badge{font-size:11px; padding:3px 9px; border-radius:999px; background:var(--paper); border:1px solid var(--line); font-weight:500;}
+.day-badge b{font-family:'Space Grotesk',sans-serif;}
+.day-caret{font-size:12px; color:var(--muted); transition:transform .15s;}
+.day-block.collapsed .day-caret{transform:rotate(-90deg);}
+.day-body{display:block;}
+.day-block.collapsed .day-body{display:none;}
+
+table.daily{border-collapse:collapse; width:100%;}
+table.daily th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:600; padding:7px 12px; border-bottom:1px solid var(--line); background:var(--paper);}
+table.daily td{padding:7px 12px; border-bottom:1px solid var(--line); font-size:12.5px;}
+table.daily tr:last-child td{border-bottom:none;}
+table.daily tr:hover{background:#fbf9f3;}
+.pill{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:600; white-space:nowrap;}
+.pill-come{background:var(--green-soft); color:var(--green);}
+.pill-training{background:#dceaf6; color:#3d6ea6;}
+.pill-noshow{background:var(--red-soft); color:var(--red);}
+.pill-pending{background:var(--sky-soft); color:var(--sky);}
+.pill-placed{background:#dceaf1; color:#2d6a8e;}
+.pill-dropped{background:var(--amber-soft); color:#9c6f1f;}
+.owner-tag{font-size:11px; color:var(--muted); font-weight:500;}
+
+@media (max-width:900px){
+  .kpi-row{grid-template-columns:repeat(2,1fr); padding:16px;}
+  .kpi-row.kpi-row-6{grid-template-columns:repeat(2,1fr);}
+  .controls{padding:12px 16px;}
+  main{padding:16px 10px 0;}
+  .topbar{padding:16px 16px 0;}
+  .funnel-strip{padding:10px 14px;}
+  .funnel-item{min-width:45%; border-right:none; border-bottom:1px solid var(--line); padding:6px;}
+  .summary-wrap{padding:12px 14px 4px;}
+  table.daily{font-size:11.5px;}
+}
+
+/* ===== Loading / error states ===== */
+#loadingScreen{position:fixed; inset:0; background:var(--cream); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:14px;}
+.spinner{width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--navy); border-radius:50%; animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loadingScreen p{color:var(--muted); font-size:13px;}
+#errorScreen{position:fixed; inset:0; background:var(--cream); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:14px; padding:24px; text-align:center;}
+#errorScreen.show{display:flex;}
+#errorScreen .err-icon{font-size:32px;}
+#errorScreen h2{font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; color:var(--red);}
+#errorScreen p{color:var(--muted); font-size:13px; max-width:480px; line-height:1.6;}
+#errorScreen button{padding:9px 20px; border-radius:8px; border:none; background:var(--navy); color:#f3efe3; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;}
+#errorScreen button:hover{background:var(--navy-2);}
+#appRoot{display:none;}
+#appRoot.show{display:block;}
+.live-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:#9b9686; margin-left:10px; font-weight:500;}
+.live-dot{width:6px; height:6px; border-radius:50%; background:#7fc99a; display:inline-block;}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="spinner"></div>
+  <p>กำลังโหลดข้อมูลจาก Google Sheets...</p>
+</div>
+
+<div id="errorScreen">
+  <div class="err-icon">⚠️</div>
+  <h2>โหลดข้อมูลไม่สำเร็จ</h2>
+  <p id="errorMessage">เกิดข้อผิดพลาดบางอย่าง</p>
+  <button id="retryBtn">ลองใหม่อีกครั้ง</button>
+</div>
+
+<div id="appRoot">
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <p class="eyebrow">SBB Field Force <span class="live-badge"><span class="live-dot"></span>เชื่อมต่อ Google Sheets สด <span id="lastUpdated"></span></span></p>
+    <h1>กำลังพลภาคสนาม &amp; สรรหารายวัน</h1>
+    <div class="tabs">
+      <button class="tab-btn active" data-page="manpower">กำลังพล</button>
+      <button class="tab-btn" data-page="daily">Daily สรรหา</button>
+      <button class="tab-btn" data-page="report">รีพอท</button>
+      <button class="refresh-btn" id="refreshBtn" title="โหลดข้อมูลใหม่จาก Google Sheets">⟳ รีเฟรชข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 1: MANPOWER ============ -->
+<section class="page active" id="page-manpower">
+  <div class="kpi-row">
+    <div class="kpi"><div class="v num" id="kpiTeams">–</div><div class="l">ทีมย่อยทั้งหมด</div></div>
+    <div class="kpi"><div class="v num" id="kpiCurrent">–</div><div class="l">กำลังพลปัจจุบัน (คน)</div></div>
+    <div class="kpi"><div class="v num" id="kpiRequired">–</div><div class="l">เป้าหมายรวม (คน)</div></div>
+    <div class="kpi"><div class="v num" id="kpiFill">–</div><div class="l">อัตราเติมเต็มเฉลี่ย (เฉพาะปัจจุบัน)</div></div>
+    <div class="kpi"><div class="v num bad" id="kpiBelowSix">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
+  </div>
+
+  <div class="funnel-strip">
+    <div class="funnel-item"><div class="fv sky num" id="fnPending">–</div><div class="fl">รอเข้ามารายงานตัว (คน)</div></div>
+    <div class="funnel-item"><div class="fv slate num" id="fnTraining">–</div><div class="fl">ฝึกงาน (รอบรรจุ) (คน)</div></div>
+    <div class="funnel-item"><div class="fv red num" id="fnNoShow">–</div><div class="fl">สมัครแล้วไม่มารายงานตัว (คน)</div></div>
+    <div class="funnel-item"><div class="fv ink num" id="fnGrand">–</div><div class="fl">รวมกำลังพลทั้งหมด [F+O+S]</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="reset-btn" id="resetAllBtn">รีเซ็ตเป้าหมายเป็นค่าจากไฟล์</button>
+    <span class="save-flash" id="saveFlash">บันทึกแล้ว ✓</span>
+    <input type="text" id="searchBox" class="search-box" placeholder="ค้นหาทีมย่อย / หัวหน้าทีม...">
+    <div class="chip-group" id="regionChips"></div>
+    <div class="short-filter-group">
+      <label class="toggle-short"><input type="checkbox" id="shortOnly"> เฉพาะทีมที่ขาดกำลังพล</label>
+      <select class="fselect" id="shortOnlyBasis">
+        <option value="current">เทียบจากกำลังพลปัจจุบัน</option>
+        <option value="grand">เทียบจากรวม [F+O+S]</option>
+      </select>
+    </div>
+  </div>
+
+  <main id="mainContent"></main>
+
+  <div class="legend">
+    <span><i style="background:#11192e"></i>กำลังพลปัจจุบัน</span>
+    <span><i style="background:#3d7ea6"></i>รอเข้ามารายงานตัว</span>
+    <span><i style="background:#5c5c9e"></i>ฝึกงาน (รอบรรจุ)</span>
+    <span><i style="background:#b8473a"></i>ต่ำกว่าเป้ามาก (ทั้งช่องปัจจุบันและช่องรวม)</span>
+    <span><i style="background:#d39a2d"></i>ต่ำกว่าเป้า</span>
+    <span><i style="background:#3f7a52"></i>ถึง/เกินเป้า</span>
+  </div>
+
+  <div class="newzone-section" id="newZoneSection" style="display:none;">
+    <div class="newzone-toggle" id="newZoneToggle">
+      <div>
+        <h3>ทีมใหม่ที่อยู่ระหว่างเปิด (จากข้อมูลสรรหา ยังไม่อยู่ใน "กำลังพลที่ต้องการ")</h3>
+        <p id="newZoneSummary"></p>
+      </div>
+      <span class="caret-nz">▸</span>
+    </div>
+    <div class="newzone-body" id="newZoneBody"></div>
+  </div>
+
+  <footer>
+    <p><b>รายชื่อทีมย่อยและภูมิภาค</b> ทั้งหมดมาจาก sheet "กำลังพลที่ต้องการ" โดยตรง (56 ทีม) — <b>กำลังพลปัจจุบัน</b> นับเฉพาะพนักงาน active จาก sheet "SBB" ตามตำแหน่งจริง: SBB คนเก่งพลัส_กิจกรรม, SBB คนเก่งพลัส_BE, ผู้ช่วยทีม, ม้าเร็ว, สาวบาวแดง — คอลัมน์ "รองหัวหน้าทีม + ทดแทนรองยศ" และ "หัวหน้าทีมเชียร์ + ทดแทน" เป็นตำแหน่งระดับโซน (ไม่ระบุทีมย่อยในไฟล์ต้นฉบับ) แสดงไว้ที่ทีมย่อยแรกของโซนนั้นเพื่อให้ตรงโครงสร้างตาราง</p>
+    <p><b>รอเข้ามารายงานตัว</b> และ <b>ฝึกงาน (รอบรรจุ)</b> นับจาก sheet "ฝึกงาน" ตามสถานะรายงานตัว/สถานะฝึกงาน เช่นเดิม — คนที่ "ผ่านฝึกงาน-บรรจุ" (<span id="ftPlaced">–</span> คน) ถือว่าบรรจุแล้วจึงไม่นับเป็นฝึกงาน ส่วนคนที่ "ไม่ผ่านฝึกงาน"/"ยกเลิกฝึกงาน" (<span id="ftDropped">–</span> คน) และ "ไม่มารายงานตัว" (<span id="ftNoshow">–</span> คน) ถูกตัดออกจากทุกยอด</p>
+    <p><b>กำลังพลที่ต้องการ</b> แก้ไขได้ทีละทีมในตาราง (ค่าเริ่มต้นมาจากไฟล์ ส่วนใหญ่ 8 คน บางทีม 10 คน) ระบบบันทึกการแก้ไขให้อัตโนมัติ ปุ่ม "รีเซ็ตเป้าหมายเป็นค่าจากไฟล์" ใช้ย้อนกลับค่าตามไฟล์ต้นฉบับ</p>
+    <p><b>ช่อง "รวม [F+O+S]"</b> = กำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) และมีสีกำกับเช่นเดียวกับช่องกำลังพลปัจจุบัน หากรวมแล้วยังน้อยกว่ากำลังพลที่ต้องการของทีมนั้น จะขึ้นสีแดง/เหลืองให้สังเกตได้ทันทีว่าต่อให้คนที่รอ/ฝึกงานมาครบ ก็ยังไม่พอเป้า</p>
+    <p><b>การ์ด "ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน"</b> นับทีมที่ผลรวมกำลังพลปัจจุบัน+รอเข้ารายงานตัว+ฝึกงาน น้อยกว่า 6 คน (เกณฑ์ตายตัวที่ 6 คน ไม่ขึ้นกับเป้าหมายที่ตั้งไว้ของแต่ละทีม) ใช้มอนิเตอร์ทีมที่กำลังพลรวมต่ำมากเป็นพิเศษ ตัวเลขนี้จะเปลี่ยนตามตัวกรองภูมิภาคที่เลือกไว้ด้านบนด้วย</p>
+  </footer>
+</section>
+
+<!-- ============ PAGE 2: DAILY ============ -->
+<section class="page" id="page-daily">
+  <div class="kpi-row kpi-row-6">
+    <div class="kpi"><div class="v num" id="d_kpiTotal">–</div><div class="l">ผู้สมัครทั้งหมด (คน)</div></div>
+    <div class="kpi"><div class="v num warn" id="d_kpiPending">–</div><div class="l">รอเข้ารายงานตัว (คน)</div></div>
+    <div class="kpi"><div class="v num" style="color:#7fa8d9" id="d_kpiTraining">–</div><div class="l">อยู่ระหว่างฝึกงาน (คน)</div></div>
+    <div class="kpi"><div class="v num good" id="d_kpiPlaced">–</div><div class="l">บรรจุแล้ว (คน)</div></div>
+    <div class="kpi"><div class="v num" style="color:#e8b659" id="d_kpiDropped">–</div><div class="l">ไม่ผ่าน/ยกเลิก (คน)</div></div>
+    <div class="kpi"><div class="v num bad" id="d_kpiNoshow">–</div><div class="l">ไม่มารายงานตัว (คน)</div></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="d_searchBox" class="search-box" placeholder="ค้นหาชื่อ / พื้นที่...">
+    <div class="field"><label for="d_dateFrom">วันที่สรรหา</label><input type="date" id="d_dateFrom" class="date-input"><span class="date-sep">ถึง</span><input type="date" id="d_dateTo" class="date-input"><button class="reset-btn" id="d_dateResetBtn">ล้างวันที่</button></div>
+    <div class="chip-group" id="positionChips"></div>
+    <div class="chip-group" id="statusChips"></div>
+    <select class="fselect" id="ownerSelect"><option value="all">ผู้สรรหาทั้งหมด</option></select>
+  </div>
+
+  <div class="summary-wrap">
+    <div class="summary-title" id="summaryTitle">สรุปจำนวนผู้สมัครตามผู้สรรหา และตำแหน่ง</div>
+    <div class="summary-hint">กรองได้จากตัวเลือกด้านบน (วันที่ / ตำแหน่ง / สถานะ / ผู้สรรหา / คำค้นหา) หรือคลิกชื่อผู้สรรหา/หัวตำแหน่งในตารางด้านล่างเพื่อกรองโดยตรง (คลิกซ้ำเพื่อยกเลิก)</div>
+    <div id="ownerSummaryHolder"></div>
+  </div>
+
+  <main id="dailyContent"></main>
+
+  <footer>
+    <p>ข้อมูลทั้งหมดมาจาก sheet "ฝึกงาน" จัดกลุ่มตาม <b>วันที่สรรหา</b> เรียงจากวันล่าสุดไปวันแรกสุด (<span id="ftDateMin">–</span> ถึง <span id="ftDateMax">–</span>) แต่ละวันแสดงทุกคนที่ถูกสรรหาในวันนั้น พร้อมตำแหน่ง พื้นที่ สถานะ และผู้สรรหา (Owner)</p>
+    <p><b>คอลัมน์ "สถานะ"</b> รวมสถานะรายงานตัวกับสถานะฝึกงานเป็นขั้นเดียว: <b>รอเข้ารายงานตัว</b> = ยังไม่ถึงวันรายงานตัว, <b>อยู่ระหว่างฝึกงาน</b> = มารายงานตัวแล้วและยังไม่มีผลสรุป (สถานะฝึกงานเป็น "ระหว่างฝึกงาน"/"ต่อฝึกงาน" หรือยังไม่ระบุ — กล่าวคือ มารายงานตัว = อยู่ระหว่างฝึกงาน จนกว่าจะมีผลสรุป), <b>บรรจุแล้ว</b> = ผ่านฝึกงานและบรรจุแล้ว, <b>ไม่ผ่าน/ยกเลิก</b> = ไม่ผ่านฝึกงานหรือยกเลิกระหว่างฝึกงาน, <b>ไม่มารายงานตัว</b> = ไม่มาตามนัด</p>
+    <p><b>ตารางสรุปด้านบน</b> นับจำนวนคนที่แต่ละผู้สรรหา (Owner) หาได้ แยกตามตำแหน่ง พร้อมยอดรวมต่อคนและยอดรวมทั้งหมด — ตัวเลขในตารางนี้จะปรับตามตัวกรอง (วันที่/ตำแหน่ง/สถานะ/ผู้สรรหา/คำค้นหา) ที่เลือกไว้ด้านบนเสมอ</p>
+    <p><b>ตัวกรองวันที่สรรหา</b> เลือกช่วงวันที่ (จาก-ถึง) เพื่อดูเฉพาะข้อมูลในช่วงนั้น เช่น ดูเฉพาะสัปดาห์นี้หรือเดือนนี้ ปุ่ม "ล้างวันที่" ใช้ย้อนกลับไปดูข้อมูลทั้งหมด</p>
+  </footer>
+</section>
+
+<!-- ============ PAGE 3: REPORT ============ -->
+<section class="page" id="page-report">
+  <div class="kpi-row">
+    <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
+    <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</div></div>
+    <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็วเลย</div></div>
+    <div class="kpi"><div class="v num" id="r_kpiDailyTotal">–</div><div class="l">ยอดสรรหาทั้งหมด (คน)</div></div>
+  </div>
+
+  <main id="reportContent">
+
+    <div class="report-block">
+      <h2 class="report-h2">1. ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</h2>
+      <p class="report-sub">นับจากผลรวมกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) ของแต่ละทีม</p>
+      <div class="table-scroll"><table class="report-table" id="r_table_below6"></table></div>
+    </div>
+
+    <div class="report-block">
+      <h2 class="report-h2">2. ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</h2>
+      <p class="report-sub">นับจากผลรวมกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) ของแต่ละทีม</p>
+      <div class="table-scroll"><table class="report-table" id="r_table_below8"></table></div>
+    </div>
+
+    <div class="report-block">
+      <h2 class="report-h2">3. ทีมที่ไม่มี "ม้าเร็ว" เลย</h2>
+      <p class="report-sub">นับรวมทั้งกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) — ถ้าทั้งสามส่วนเป็น 0 หมด แปลว่าทีมนั้นไม่มีม้าเร็วในระบบเลย</p>
+      <div class="table-scroll"><table class="report-table" id="r_table_norider"></table></div>
+    </div>
+
+    <div class="report-block">
+      <h2 class="report-h2">4. สรุปจำนวนสรรหารายวัน ตามตำแหน่ง</h2>
+      <p class="report-sub">นับทุกรายการในข้อมูลสรรหา (sheet ฝึกงาน) แยกตามตำแหน่ง ไม่จำกัดสถานะ</p>
+      <div class="table-scroll"><table class="report-table" id="r_table_position"></table></div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>รีพอทนี้สรุปจากข้อมูลล่าสุดในไฟล์ ณ ขณะสร้างรายงาน หากแก้ไขเป้าหมายกำลังพลของทีมในหน้า "กำลังพล" รายการข้อ 1-2 จะไม่เปลี่ยนตาม เนื่องจากใช้เกณฑ์ตายตัว (6 คน และ 8 คน) ไม่ใช่เป้าหมายที่ตั้งไว้ของแต่ละทีม</p>
+  </footer>
+</section>
+
+</div><!-- /#appRoot -->
+
+<script>
+let FULL, P1, P2, DATA, NEW_ZONES, FUNNEL;
+
+/* ============ TAB SWITCHING ============ */
+let reportInited = false;
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    if(btn.dataset.page==='daily' && !dailyInited){ initDaily(); dailyInited = true; }
+    if(btn.dataset.page==='report' && !reportInited){ initReport(); reportInited = true; }
+  });
+});
+
+/* ============ PAGE 1: MANPOWER ============ */
+let activeRegion = 'all';
+let shortOnly = false;
+let shortBasis = 'current';
+let searchTerm = '';
+const targetOverrides = {};
+const hasClaudeStorage = !!(window.storage && window.storage.get && window.storage.set);
+const LS_KEY = 'sbb_target_overrides_v1';
+function lsAvailable(){
+  try{ const k='__t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
+const hasLocalStorage = !hasClaudeStorage && lsAvailable();
+
+function safeKey(team){ return ('target_'+team.team).replace(/[\s\/\\'"]+/g, '_'); }
+function getTarget(team){ const k=safeKey(team); return targetOverrides.hasOwnProperty(k) ? targetOverrides[k] : team.required; }
+function flashSaved(){
+  const el = document.getElementById('saveFlash');
+  el.classList.add('show');
+  clearTimeout(window.__flashTimer);
+  window.__flashTimer = setTimeout(()=>el.classList.remove('show'), 1200);
+}
+async function loadOverrides(){
+  if(hasClaudeStorage){
+    try{
+      const res = await window.storage.list('target_', false);
+      if(res && res.keys && res.keys.length){
+        await Promise.all(res.keys.map(async k=>{
+          try{ const r = await window.storage.get(k, false); if(r && r.value!==undefined) targetOverrides[k]=parseFloat(r.value); }catch(e){}
+        }));
+      }
+    }catch(e){ console.error('loadOverrides failed', e); }
+  } else if(hasLocalStorage){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(raw){ Object.assign(targetOverrides, JSON.parse(raw)); }
+    }catch(e){ console.error('loadOverrides (localStorage) failed', e); }
+  }
+}
+function saveOverridesToLocalStorage(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(targetOverrides)); }catch(e){ console.error(e); }
+}
+async function setTarget(team, value){
+  const k = safeKey(team);
+  targetOverrides[k] = value;
+  if(hasClaudeStorage){ try{ await window.storage.set(k, String(value), false); flashSaved(); }catch(e){ console.error(e); } }
+  else if(hasLocalStorage){ saveOverridesToLocalStorage(); flashSaved(); }
+  else { flashSaved(); }
+  render();
+}
+async function resetAllTargets(){
+  const keys = Object.keys(targetOverrides);
+  if(hasClaudeStorage){ await Promise.all(keys.map(k=>window.storage.delete(k, false).catch(()=>{}))); }
+  keys.forEach(k=>delete targetOverrides[k]);
+  if(hasLocalStorage){ saveOverridesToLocalStorage(); }
+  render();
+}
+
+
+function statusClass(current, target){
+  if(current < target*0.625) return 'status-red';
+  if(current < target) return 'status-amber';
+  return 'status-green';
+}
+function sv(val, extraCls){ return `<span class="sub-val ${val===0?'zero':''} ${extraCls||''}">${val}</span>`; }
+
+function teamRow(team, isZoneStart){
+  const target = getTarget(team);
+  const cls = statusClass(team.current_total, target);
+  const grandCls = statusClass(team.grand_total, target);
+  const rowCls = isZoneStart ? 'zone-divider' : '';
+  const key = safeKey(team);
+  return `<tr class="${rowCls}" data-current="${team.current_total}" data-grand="${team.grand_total}" data-target="${target}" data-search="${(team.team+' '+team.head).toLowerCase()}">
+      <td class="col-team"><div class="team-name">${team.team}</div></td>
+      <td class="col-head"><div class="head-name">${team.head||'-'}</div></td>
+      <td><input type="number" class="target-cell" data-key="${key}" value="${target}" min="1" max="50"></td>
+      <td><span class="tot-current ${cls}">${team.current_total}</span></td>
+      <td>${sv(team.activity)}</td>
+      <td>${sv(team.be)}</td>
+      <td>${sv(team.assistant)}</td>
+      <td>${sv(team.rider)}</td>
+      <td>${sv(team.sales)}</td>
+      <td>${sv(team.deputy_backup)}</td>
+      <td>${sv(team.leader_backup)}</td>
+      <td><span class="tot-pending ${team.pending_total===0?'zero':''}">${team.pending_total}</span></td>
+      <td>${sv(team.p_assistant)}</td>
+      <td>${sv(team.p_rider)}</td>
+      <td>${sv(team.p_sales)}</td>
+      <td><span class="tot-training ${team.training_total===0?'zero':''}">${team.training_total}</span></td>
+      <td>${sv(team.t_assistant)}</td>
+      <td>${sv(team.t_rider)}</td>
+      <td>${sv(team.t_sales)}</td>
+      <td><span class="tot-grand ${grandCls}">รวม ${team.grand_total}</span></td>
+    </tr>`;
+}
+
+function headerRows(){
+  return `<thead>
+    <tr>
+      <th class="col-team" rowspan="2" style="text-align:left">ทีมย่อย</th>
+      <th class="col-head" rowspan="2" style="text-align:left">หัวหน้าทีมเชียร์</th>
+      <th rowspan="2">กำลังพล<br>ที่ต้องการ</th>
+      <th class="grp-current" colspan="8">กำลังพลปัจจุบัน</th>
+      <th class="grp-pending" colspan="4">รอเข้ามารายงานตัว</th>
+      <th class="grp-training" colspan="4">ฝึกงาน (รอบรรจุ)</th>
+      <th rowspan="2">รวม<br>[F+O+S]</th>
+    </tr>
+    <tr>
+      <th class="sub-current">กำลังพล<br>ปัจจุบัน</th>
+      <th class="sub-current">SBB คนเก่งพลัส_<br>กิจกรรม</th>
+      <th class="sub-current">SBB คนเก่งพลัส_<br>BE</th>
+      <th class="sub-current">ผู้ช่วยทีม</th>
+      <th class="sub-current">ม้าเร็ว</th>
+      <th class="sub-current">สาวบาวแดง</th>
+      <th class="sub-current">รองหัวหน้าทีม<br>+ทดแทนรองยศ</th>
+      <th class="sub-current">หัวหน้าทีมเชียร์<br>+ทดแทน</th>
+      <th class="sub-pending">รอเข้ามา<br>รายงานตัว</th>
+      <th class="sub-pending">ผู้ช่วยทีม</th>
+      <th class="sub-pending">ม้าเร็ว</th>
+      <th class="sub-pending">สาวบาวแดง</th>
+      <th class="sub-training">ฝึกงาน<br>(รอบรรจุ)</th>
+      <th class="sub-training">ผู้ช่วยทีม</th>
+      <th class="sub-training">ม้าเร็ว</th>
+      <th class="sub-training">สาวบาวแดง</th>
+    </tr>
+  </thead>`;
+}
+
+function regionTable(region){
+  const rows = region.teams.map((t,i)=>teamRow(t, i===0)).join('');
+  return `<div class="table-scroll"><table class="roster">${headerRows()}<tbody>${rows}</tbody></table></div>`;
+}
+function regionTotals(region){
+  let current=0, count=0, pending=0, training=0, grand=0, required=0;
+  region.teams.forEach(t=>{current+=t.current_total; count++; pending+=t.pending_total; training+=t.training_total; grand+=t.grand_total; required+=getTarget(t);});
+  return {current, required, count, pending, training, grand};
+}
+
+function render(){
+  const main = document.getElementById('mainContent');
+  main.innerHTML='';
+  let grandCurrent=0, grandRequired=0, grandTeams=0, belowSixCount=0;
+  const BELOW_THRESHOLD = 6;
+
+  DATA.forEach(region=>{
+    if(activeRegion!=='all' && region.bigregion!==activeRegion) return;
+    const {current, required, count, pending, training, grand} = regionTotals(region);
+    grandCurrent+=current; grandRequired+=required; grandTeams+=count;
+    region.teams.forEach(t=>{ if(t.grand_total < BELOW_THRESHOLD) belowSixCount++; });
+
+    const fillPct = required>0 ? Math.min((current/required*100),100) : 0;
+    const fillColor = current>=required? '#3f7a52' : (current<required*0.7? '#b8473a':'#d39a2d');
+
+    const block = document.createElement('div');
+    block.className='region-block';
+    block.innerHTML = `
+      <div class="region-head">
+        <span class="caret">▾</span>
+        <h2>${region.bigregion}</h2>
+        <div class="region-stats">
+          <span>ทีม <b>${count}</b></span>
+          <span>ปัจจุบัน <b>${current}</b> / เป้า <b>${required}</b></span>
+          <span>รอ+ฝึกงาน <b>${pending+training}</b></span>
+          <span>รวม <b>${grand}</b></span>
+          <div class="region-fillbar"><div style="width:${fillPct}%;background:${fillColor}"></div></div>
+        </div>
+      </div>
+      <div class="region-body">${regionTable(region)}</div>
+    `;
+    block.querySelector('.region-head').addEventListener('click', ()=>block.classList.toggle('collapsed'));
+    main.appendChild(block);
+  });
+
+  if(main.innerHTML===''){ main.innerHTML = '<div class="empty-msg">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>'; }
+
+  document.getElementById('kpiTeams').textContent = grandTeams;
+  document.getElementById('kpiCurrent').textContent = grandCurrent;
+  document.getElementById('kpiRequired').textContent = grandRequired;
+  document.getElementById('kpiFill').textContent = grandRequired>0 ? Math.round(grandCurrent/grandRequired*100)+'%' : '–';
+  const fillEl = document.getElementById('kpiFill');
+  fillEl.className='v num ' + (grandCurrent>=grandRequired?'good':(grandCurrent<grandRequired*0.8?'bad':'warn'));
+  document.getElementById('kpiBelowSix').textContent = belowSixCount;
+  document.getElementById('fnGrand').textContent = grandCurrent + FUNNEL.pending_total_all + FUNNEL.training_total_all;
+
+  applyFilters();
+}
+function applyFilters(){
+  document.querySelectorAll('table.roster tbody tr').forEach(tr=>{
+    const cur = parseFloat(tr.dataset.current);
+    const grand = parseFloat(tr.dataset.grand);
+    const tgt = parseFloat(tr.dataset.target);
+    const txt = tr.dataset.search;
+    let show = true;
+    if(shortOnly){
+      const basisVal = shortBasis==='grand' ? grand : cur;
+      if(basisVal>=tgt) show=false;
+    }
+    if(searchTerm && !txt.includes(searchTerm)) show=false;
+    tr.classList.toggle('row-hide', !show);
+  });
+  document.querySelectorAll('.region-block').forEach(rb=>{
+    const visibleRows = rb.querySelectorAll('tbody tr:not(.row-hide)').length;
+    rb.style.display = visibleRows===0 ? 'none' : '';
+  });
+}
+function buildRegionChips(){
+  const wrap = document.getElementById('regionChips');
+  const regions = ['all', ...DATA.map(r=>r.bigregion)];
+  wrap.innerHTML = regions.map(r=>`<button class="chip ${r===activeRegion?'active':''}" data-region="${r}">${r==='all'?'ทั้งหมด':r}</button>`).join('');
+  wrap.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      activeRegion = ch.dataset.region;
+      wrap.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      ch.classList.add('active');
+      render();
+    });
+  });
+}
+function renderFunnel(){
+  document.getElementById('fnPending').textContent = FUNNEL.pending_total_all;
+  document.getElementById('fnTraining').textContent = FUNNEL.training_total_all;
+  document.getElementById('fnNoShow').textContent = FUNNEL.no_show;
+}
+function renderNewZones(){
+  if(!NEW_ZONES || NEW_ZONES.length===0) return;
+  const totalPeople = NEW_ZONES.reduce((s,b)=>s+b.teams.reduce((s2,t)=>s2+t.training_total,0),0);
+  const totalTeams = NEW_ZONES.reduce((s,b)=>s+b.teams.length,0);
+  if(totalTeams===0) return;
+  document.getElementById('newZoneSection').style.display='';
+  document.getElementById('newZoneSummary').textContent = `${totalTeams} ทีม / ${totalPeople} คน อยู่ระหว่างฝึกงานในทีมที่ยังไม่อยู่ใน "กำลังพลที่ต้องการ"`;
+  document.getElementById('newZoneBody').innerHTML = NEW_ZONES.map(b=>`
+    <div class="nz-region"><h4>${b.bigregion} (${b.teams.length} ทีม)</h4>
+    <div class="nz-grid">${b.teams.map(t=>`
+      <div class="nz-card"><div class="nzname">${t.team}</div><div class="nzcount">${t.training_total} คน</div>
+      <div class="nzbreak">สาวบาวแดง ${t.sales} · ม้าเร็ว ${t.rider} · ผู้ช่วยทีม ${t.assistant}</div></div>`).join('')}</div></div>`).join('');
+}
+
+document.getElementById('resetAllBtn').addEventListener('click', resetAllTargets);
+document.getElementById('mainContent').addEventListener('change', (e)=>{
+  if(e.target.classList.contains('target-cell')){
+    const val = parseInt(e.target.value);
+    const key = e.target.dataset.key;
+    if(val>0){
+      const team = DATA.flatMap(r=>r.teams).find(t=>safeKey(t)===key);
+      if(team) setTarget(team, val);
+    }
+  }
+});
+document.getElementById('searchBox').addEventListener('input', (e)=>{ searchTerm=e.target.value.trim().toLowerCase(); applyFilters(); });
+document.getElementById('shortOnly').addEventListener('change', (e)=>{ shortOnly=e.target.checked; applyFilters(); });
+document.getElementById('shortOnlyBasis').addEventListener('change', (e)=>{ shortBasis=e.target.value; applyFilters(); });
+document.getElementById('newZoneToggle').addEventListener('click', ()=>{ document.getElementById('newZoneSection').classList.toggle('open'); });
+
+async function initManpower(){
+  await loadOverrides();
+  buildRegionChips();
+  renderFunnel();
+  renderNewZones();
+  render();
+}
+
+/* ============ PAGE 2: DAILY ============ */
+let dailyInited = false;
+let d_search = '';
+let d_position = 'all';
+let d_stage = 'all';
+let d_owner = 'all';
+let d_dateFrom = '';
+let d_dateTo = '';
+
+const STAGE_PILL = {
+  'รอเข้ารายงานตัว': 'pill-pending',
+  'อยู่ระหว่างฝึกงาน': 'pill-training',
+  'บรรจุแล้ว': 'pill-placed',
+  'ไม่ผ่าน/ยกเลิก': 'pill-dropped',
+  'ไม่มารายงานตัว': 'pill-noshow',
+};
+function thaiDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+}
+function dayBadges(day){
+  const parts = Object.entries(day.by_position).map(([k,v])=>`<span class="day-badge">${k} <b>${v}</b></span>`);
+  return parts.join('');
+}
+function recordRow(r){
+  const stageCls = STAGE_PILL[r.stage] || '';
+  return `<tr data-search="${(r.name+' '+r.team).toLowerCase()}" data-position="${r.position}" data-stage="${r.stage}" data-owner="${r.owner}">
+    <td>${r.name}</td>
+    <td>${r.position}</td>
+    <td>${r.team}</td>
+    <td><span class="pill ${stageCls}">${r.stage}</span></td>
+    <td class="owner-tag">${r.owner}</td>
+  </tr>`;
+}
+function dayBlock(day){
+  const rows = day.records.map(recordRow).join('');
+  return `<div class="day-block" data-date="${day.date}">
+    <div class="day-head">
+      <span class="day-caret">▾</span>
+      <div><div class="dlabel">${thaiDate(day.date)}</div><div class="dsub">${day.count} คน</div></div>
+      <div class="day-badges">${dayBadges(day)}</div>
+    </div>
+    <div class="day-body">
+      <table class="daily">
+        <thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th>พื้นที่ (ทีมย่อย)</th><th>สถานะ</th><th>ผู้สรรหา</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function renderDaily(){
+  const main = document.getElementById('dailyContent');
+  main.innerHTML = P2.days.map(dayBlock).join('');
+  main.querySelectorAll('.day-head').forEach(h=>h.addEventListener('click', ()=>h.closest('.day-block').classList.toggle('collapsed')));
+  applyDailyFilters();
+}
+function applyDailyFilters(){
+  const anyFilter = (d_position!=='all' || d_stage!=='all' || d_owner!=='all' || !!d_search);
+  document.querySelectorAll('.day-block').forEach(db=>{
+    const dateStr = db.dataset.date;
+    const inRange = (!d_dateFrom || dateStr>=d_dateFrom) && (!d_dateTo || dateStr<=d_dateTo);
+    db.classList.toggle('date-hide', !inRange);
+    if(!inRange) return;
+    db.querySelectorAll('tbody tr').forEach(tr=>{
+      let show = true;
+      if(d_position!=='all' && tr.dataset.position!==d_position) show=false;
+      if(d_stage!=='all' && tr.dataset.stage!==d_stage) show=false;
+      if(d_owner!=='all' && tr.dataset.owner!==d_owner) show=false;
+      if(d_search && !tr.dataset.search.includes(d_search)) show=false;
+      tr.style.display = show ? '' : 'none';
+    });
+    const total = db.querySelectorAll('tbody tr').length;
+    const visible = Array.from(db.querySelectorAll('tbody tr')).filter(tr=>tr.style.display!=='none').length;
+    db.classList.toggle('row-hide', visible===0);
+    const dsub = db.querySelector('.dsub');
+    dsub.textContent = anyFilter ? `${visible} / ${total} คน` : `${total} คน`;
+  });
+  buildOwnerSummary();
+}
+function recordMatchesFilters(r, dateStr){
+  if(d_dateFrom && dateStr<d_dateFrom) return false;
+  if(d_dateTo && dateStr>d_dateTo) return false;
+  if(d_position!=='all' && r.position!==d_position) return false;
+  if(d_stage!=='all' && r.stage!==d_stage) return false;
+  if(d_owner!=='all' && r.owner!==d_owner) return false;
+  if(d_search && !(r.name+' '+r.team).toLowerCase().includes(d_search)) return false;
+  return true;
+}
+function buildOwnerSummary(){
+  const positions = P2.filters.positions;
+  const pivot = {}; // owner -> {position: count}
+  const posTotals = {}; positions.forEach(p=>posTotals[p]=0);
+  let grandTotal = 0;
+
+  P2.days.forEach(day=>{
+    day.records.forEach(r=>{
+      if(!recordMatchesFilters(r, day.date)) return;
+      if(!pivot[r.owner]) pivot[r.owner] = {};
+      pivot[r.owner][r.position] = (pivot[r.owner][r.position]||0) + 1;
+      posTotals[r.position] = (posTotals[r.position]||0) + 1;
+      grandTotal++;
+    });
+  });
+
+  const owners = Object.keys(pivot).sort((a,b)=> {
+    const ta = positions.reduce((s,p)=>s+(pivot[a][p]||0),0);
+    const tb = positions.reduce((s,p)=>s+(pivot[b][p]||0),0);
+    return tb - ta;
+  });
+
+  const holder = document.getElementById('ownerSummaryHolder');
+  if(owners.length===0){
+    holder.innerHTML = '<div class="empty-msg">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>';
+    return;
+  }
+
+  let html = '<table class="owner-summary"><thead><tr><th class="own-th" data-act="reset-owner">ผู้สรรหา</th>';
+  positions.forEach(p=>{ const active = d_position===p ? ' th-active':''; html += `<th class="pos-th${active}" data-pos="${p}">${p}</th>`; });
+  html += '<th>รวม</th></tr></thead><tbody>';
+  owners.forEach(o=>{
+    const rowTotal = positions.reduce((s,p)=>s+(pivot[o][p]||0),0);
+    const ownActive = d_owner===o ? ' own-active':'';
+    html += `<tr><td class="own-td${ownActive}" data-owner="${o}">${o}</td>`;
+    positions.forEach(p=>{ const v = pivot[o][p]||0; html += `<td>${v||''}</td>`; });
+    html += `<td class="sum-cell">${rowTotal}</td></tr>`;
+  });
+  html += `<tr class="grand-row"><td colspan="${positions.length+1}">รวม</td><td class="sum-cell">${grandTotal}</td></tr>`;
+  html += '</tbody></table>';
+  holder.innerHTML = html;
+
+  holder.querySelectorAll('.pos-th').forEach(th=>{
+    th.addEventListener('click', ()=>setPositionFilter(d_position===th.dataset.pos ? 'all' : th.dataset.pos));
+  });
+  const ownTh = holder.querySelector('.own-th');
+  if(ownTh) ownTh.addEventListener('click', ()=>setOwnerFilter('all'));
+  holder.querySelectorAll('.own-td').forEach(td=>{
+    td.addEventListener('click', ()=>setOwnerFilter(d_owner===td.dataset.owner ? 'all' : td.dataset.owner));
+  });
+}
+function setPositionFilter(value){
+  d_position = value;
+  document.querySelectorAll('#positionChips .chip').forEach(c=>c.classList.toggle('active', c.dataset.pos===value));
+  applyDailyFilters();
+}
+function setOwnerFilter(value){
+  d_owner = value;
+  const sel = document.getElementById('ownerSelect');
+  if(sel) sel.value = value;
+  applyDailyFilters();
+}
+function buildDailyFilters(){
+  const posWrap = document.getElementById('positionChips');
+  const positions = ['all', ...P2.filters.positions];
+  posWrap.innerHTML = positions.map(p=>`<button class="chip ${p==='all'?'active':''}" data-pos="${p}">${p==='all'?'ทุกตำแหน่ง':p}</button>`).join('');
+  posWrap.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click', ()=>setPositionFilter(ch.dataset.pos)));
+
+  const stageWrap = document.getElementById('statusChips');
+  const stages = ['all','รอเข้ารายงานตัว','อยู่ระหว่างฝึกงาน','บรรจุแล้ว','ไม่ผ่าน/ยกเลิก','ไม่มารายงานตัว'];
+  stageWrap.innerHTML = stages.map(s=>`<button class="chip ${s==='all'?'active':''}" data-st="${s}">${s==='all'?'ทุกสถานะ':s}</button>`).join('');
+  stageWrap.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click', ()=>{
+    d_stage = ch.dataset.st;
+    stageWrap.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    ch.classList.add('active');
+    applyDailyFilters();
+  }));
+
+  const ownerSel = document.getElementById('ownerSelect');
+  ownerSel.innerHTML = '<option value="all">ผู้สรรหาทั้งหมด</option>';
+  P2.filters.owners.forEach(o=>{
+    const opt = document.createElement('option');
+    opt.value=o; opt.textContent=o+' ('+(P2.totals.by_owner[o]||0)+')';
+    ownerSel.appendChild(opt);
+  });
+  ownerSel.value = d_owner;
+  const newOwnerSel = ownerSel.cloneNode(true);
+  ownerSel.parentNode.replaceChild(newOwnerSel, ownerSel);
+  newOwnerSel.addEventListener('change', ()=>{ d_owner = newOwnerSel.value; applyDailyFilters(); });
+}
+function renderDailyKPI(){
+  document.getElementById('d_kpiTotal').textContent = P2.totals.count;
+  document.getElementById('d_kpiPending').textContent = P2.totals.by_stage['รอเข้ารายงานตัว']||0;
+  document.getElementById('d_kpiTraining').textContent = P2.totals.by_stage['อยู่ระหว่างฝึกงาน']||0;
+  document.getElementById('d_kpiPlaced').textContent = P2.totals.by_stage['บรรจุแล้ว']||0;
+  document.getElementById('d_kpiDropped').textContent = P2.totals.by_stage['ไม่ผ่าน/ยกเลิก']||0;
+  document.getElementById('d_kpiNoshow').textContent = P2.totals.by_stage['ไม่มารายงานตัว']||0;
+}
+document.getElementById('d_searchBox').addEventListener('input', (e)=>{ d_search=e.target.value.trim().toLowerCase(); applyDailyFilters(); });
+document.getElementById('d_dateFrom').addEventListener('change', (e)=>{ d_dateFrom=e.target.value; applyDailyFilters(); });
+document.getElementById('d_dateTo').addEventListener('change', (e)=>{ d_dateTo=e.target.value; applyDailyFilters(); });
+document.getElementById('d_dateResetBtn').addEventListener('click', ()=>{
+  d_dateFrom=''; d_dateTo='';
+  document.getElementById('d_dateFrom').value='';
+  document.getElementById('d_dateTo').value='';
+  applyDailyFilters();
+});
+
+function initDaily(){
+  renderDailyKPI();
+  const dfEl = document.getElementById('d_dateFrom');
+  const dtEl = document.getElementById('d_dateTo');
+  dfEl.min = P2.date_range.min; dfEl.max = P2.date_range.max;
+  dtEl.min = P2.date_range.min; dtEl.max = P2.date_range.max;
+  buildDailyFilters();
+  renderDaily();
+}
+
+/* ============ PAGE 3: REPORT ============ */
+function allTeamsFlat(){
+  const out = [];
+  DATA.forEach(region=>{ region.teams.forEach(t=>{ out.push(Object.assign({bigregion: region.bigregion}, t)); }); });
+  return out;
+}
+function teamListTable(teams, sortByGrand){
+  if(sortByGrand) teams = teams.slice().sort((a,b)=>a.grand_total-b.grand_total);
+  if(teams.length===0){
+    return '<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีทีมที่เข้าเงื่อนไขนี้</td></tr></tbody>';
+  }
+  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ปัจจุบัน</th><th class="num-cell">รอ+ฝึกงาน</th><th class="num-cell">รวม [F+O+S]</th></tr></thead><tbody>`;
+  teams.forEach(t=>{
+    const sevCls = t.grand_total < t.required*0.625 ? 'sev-red' : (t.grand_total < t.required ? 'sev-amber' : '');
+    html += `<tr class="${sevCls}"><td>${t.bigregion}</td><td>${t.team}</td><td>${t.head||'-'}</td><td class="num-cell">${t.current_total}</td><td class="num-cell">${t.pending_total+t.training_total}</td><td class="num-cell">${t.grand_total}</td></tr>`;
+  });
+  html += '</tbody>';
+  return html;
+}
+function riderTable(teams){
+  if(teams.length===0){
+    return '<tbody><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีทีมที่เข้าเงื่อนไขนี้ — ทุกทีมมีม้าเร็วอย่างน้อย 1 คน</td></tr></tbody>';
+  }
+  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ม้าเร็ว ปัจจุบัน</th><th class="num-cell">ม้าเร็ว รอ+ฝึกงาน</th></tr></thead><tbody>`;
+  teams.forEach(t=>{
+    html += `<tr class="sev-red"><td>${t.bigregion}</td><td>${t.team}</td><td>${t.head||'-'}</td><td class="num-cell">${t.rider}</td><td class="num-cell">${t.p_rider+t.t_rider}</td></tr>`;
+  });
+  html += '</tbody>';
+  return html;
+}
+function positionSummaryTable(){
+  const byPos = P2.totals.by_position;
+  const positions = Object.keys(byPos).sort((a,b)=>byPos[b]-byPos[a]);
+  let html = `<thead><tr><th>ตำแหน่ง</th><th class="num-cell">จำนวน (คน)</th><th class="num-cell">สัดส่วน</th></tr></thead><tbody>`;
+  positions.forEach(p=>{
+    const pct = Math.round(byPos[p]/P2.totals.count*1000)/10;
+    html += `<tr><td>${p}</td><td class="num-cell">${byPos[p]}</td><td class="num-cell">${pct}%</td></tr>`;
+  });
+  html += `<tr style="background:var(--cream-2);font-weight:700;"><td>รวม</td><td class="num-cell">${P2.totals.count}</td><td class="num-cell">100%</td></tr>`;
+  html += '</tbody>';
+  return html;
+}
+function initReport(){
+  const teams = allTeamsFlat();
+  const below6 = teams.filter(t=>t.grand_total < 6);
+  const below8 = teams.filter(t=>t.grand_total < 8);
+  const noRider = teams.filter(t=>(t.rider + t.p_rider + t.t_rider) === 0);
+
+  document.getElementById('r_kpiBelow6').textContent = below6.length;
+  document.getElementById('r_kpiBelow8').textContent = below8.length;
+  document.getElementById('r_kpiNoRider').textContent = noRider.length;
+  document.getElementById('r_kpiDailyTotal').textContent = P2.totals.count;
+
+  document.getElementById('r_table_below6').innerHTML = teamListTable(below6, true);
+  document.getElementById('r_table_below8').innerHTML = teamListTable(below8, true);
+  document.getElementById('r_table_norider').innerHTML = riderTable(noRider);
+  document.getElementById('r_table_position').innerHTML = positionSummaryTable();
+}
+
+/* ============ BOOTSTRAP: fetch live data from /api/data ============ */
+function formatThaiDateShort(iso){
+  if(!iso) return '-';
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('th-TH', {year:'numeric', month:'short', day:'numeric'});
+}
+function populateFooterStats(){
+  document.getElementById('ftPlaced').textContent = FUNNEL.placed_total_all;
+  document.getElementById('ftDropped').textContent = FUNNEL.dropped_total_all;
+  document.getElementById('ftNoshow').textContent = FUNNEL.no_show;
+  document.getElementById('ftDateMin').textContent = formatThaiDateShort(P2.date_range.min);
+  document.getElementById('ftDateMax').textContent = formatThaiDateShort(P2.date_range.max);
+}
+function resetDailyAndReportState(){
+  dailyInited = false;
+  reportInited = false;
+  document.getElementById('dailyContent').innerHTML = '';
+  document.querySelectorAll('.report-table').forEach(t=>{ t.innerHTML=''; });
+  const activePage = document.querySelector('.page.active');
+  if(activePage && activePage.id==='page-daily'){ initDaily(); dailyInited = true; }
+  if(activePage && activePage.id==='page-report'){ initReport(); reportInited = true; }
+}
+async function fetchData(){
+  const res = await fetch('/api/data', { cache: 'no-store' });
+  const json = await res.json();
+  if(!res.ok || json.error){
+    throw new Error(json.message || `โหลดข้อมูลไม่สำเร็จ (HTTP ${res.status})`);
+  }
+  return json;
+}
+async function bootstrap(isRefresh){
+  const loadingEl = document.getElementById('loadingScreen');
+  const errorEl = document.getElementById('errorScreen');
+  const appEl = document.getElementById('appRoot');
+  const refreshBtn = document.getElementById('refreshBtn');
+  errorEl.classList.remove('show');
+  if(isRefresh){ refreshBtn.disabled = true; refreshBtn.textContent = '⟳ กำลังโหลด...'; }
+  else { loadingEl.style.display = 'flex'; appEl.classList.remove('show'); }
+
+  try{
+    const json = await fetchData();
+    FULL = json;
+    P1 = FULL.page1;
+    P2 = FULL.page2;
+    DATA = P1.regions;
+    NEW_ZONES = P1.new_zones;
+    FUNNEL = P1.funnel;
+
+    populateFooterStats();
+    const genDate = new Date(FULL.generated_at);
+    document.getElementById('lastUpdated').textContent = '· อัปเดตล่าสุด ' + genDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('asof') && (document.getElementById('asof').textContent = '');
+
+    await initManpower();
+    if(isRefresh) resetDailyAndReportState();
+
+    loadingEl.style.display = 'none';
+    appEl.classList.add('show');
+  }catch(err){
+    console.error('Data load failed:', err);
+    loadingEl.style.display = 'none';
+    document.getElementById('errorMessage').textContent = err.message || 'ไม่สามารถเชื่อมต่อข้อมูลได้ กรุณาลองใหม่';
+    errorEl.classList.add('show');
+  }finally{
+    if(isRefresh){ refreshBtn.disabled = false; refreshBtn.textContent = '⟳ รีเฟรชข้อมูล'; }
+  }
+}
+document.getElementById('retryBtn').addEventListener('click', ()=>bootstrap(false));
+document.getElementById('refreshBtn').addEventListener('click', ()=>bootstrap(true));
+bootstrap(false);
+</script>
+</body>
+</html>
