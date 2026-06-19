@@ -379,6 +379,18 @@ table.daily tr:hover{background:#fbf9f3;}
   </div>
   <p class="report-sub" style="padding:10px 28px 0; max-width:1000px; margin:0 auto;">ข้อ 1-3 นับเฉพาะทีมที่มี <b>สถานะทีม = Active</b> เท่านั้น (ทีมที่ปิด/ไม่ Active จะไม่ถูกนับในรีพอทนี้ แต่ยังแสดงอยู่ในหน้า "กำลังพล" ตามปกติ)</p>
 
+  <div class="report-block" style="margin-top:18px;">
+    <p class="report-sub" style="margin-bottom:8px;">สรุปจำนวนสรรหารายวันตามตำแหน่ง (ข้อ 4 ด้านล่าง) — เลือกช่วงวันที่เพื่อกรองการ์ดและตารางสรุปตำแหน่ง</p>
+    <div class="field r4-date-field">
+      <label for="r_dateFrom">วันที่สรรหา</label>
+      <input type="date" id="r_dateFrom" class="date-input">
+      <span class="date-sep">ถึง</span>
+      <input type="date" id="r_dateTo" class="date-input">
+      <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
+    </div>
+    <div class="position-cards" id="r_positionCards"></div>
+  </div>
+
   <main id="reportContent">
 
     <div class="report-block">
@@ -401,15 +413,7 @@ table.daily tr:hover{background:#fbf9f3;}
 
     <div class="report-block">
       <h2 class="report-h2">4. สรุปจำนวนสรรหารายวัน ตามตำแหน่ง</h2>
-      <p class="report-sub">นับทุกรายการในข้อมูลสรรหา (sheet ฝึกงาน) แยกตามตำแหน่ง ไม่จำกัดสถานะ</p>
-      <div class="field r4-date-field">
-        <label for="r_dateFrom">วันที่สรรหา</label>
-        <input type="date" id="r_dateFrom" class="date-input">
-        <span class="date-sep">ถึง</span>
-        <input type="date" id="r_dateTo" class="date-input">
-        <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
-      </div>
-      <div class="position-cards" id="r_positionCards"></div>
+      <p class="report-sub">นับทุกรายการในข้อมูลสรรหา (sheet ฝึกงาน) แยกตามตำแหน่ง ไม่จำกัดสถานะ — กรองได้จากช่องวันที่ด้านบนสุดของหน้า</p>
       <div class="table-scroll"><table class="report-table" id="r_table_position"></table></div>
     </div>
 
