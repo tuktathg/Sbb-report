@@ -94,6 +94,9 @@ function classifyStage(status, sub) {
 function buildData(requiredRows, sbbRows, pipeRows) {
   // ---------- 1. canonical team list (กำลังพลที่ต้องการ) ----------
   // header: ภูมิภาค, ทีมย่อย, หัวหน้าทีมเชียร์, กำลังพลที่ต้องการ, สถานะทีม
+  // NOTE: all teams (Active and otherwise) are kept here so the roster ("กำลังพล") page
+  // retains full visibility. The "รีพอท" report page is responsible for filtering down
+  // to Active-only teams when computing its summary counts.
   const canonical = [];
   for (let i = 1; i < requiredRows.length; i++) {
     const row = requiredRows[i];
@@ -102,9 +105,9 @@ function buildData(requiredRows, sbbRows, pipeRows) {
     const team = cell(row, 1);
     const head = cell(row, 2);
     const required = parseInt(cell(row, 3), 10) || 0;
-    const status = cell(row, 4) || 'Active';
-    if (status && status.toLowerCase() !== 'active') continue; // skip inactive teams
-    canonical.push({ region, team, head, required });
+    const statusRaw = cell(row, 4) || 'Active';
+    const isActive = statusRaw.toLowerCase() === 'active';
+    canonical.push({ region, team, head, required, status: statusRaw, is_active: isActive });
   }
   const canonicalTeamNames = new Set(canonical.map((c) => c.team));
   const regionOrder = [];
@@ -241,6 +244,8 @@ function buildData(requiredRows, sbbRows, pipeRows) {
       team: c.team,
       head: c.head,
       required: c.required,
+      status: c.status,
+      is_active: c.is_active,
       activity: st.activity,
       be: st.be,
       assistant: st.assistant,
