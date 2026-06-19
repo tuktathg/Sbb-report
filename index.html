@@ -143,6 +143,12 @@ table.report-table tbody tr:hover{background:#fbf9f3;}
 table.report-table td.num-cell, table.report-table th.num-cell{text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700;}
 table.report-table tr.sev-red td.num-cell{color:var(--red);}
 table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
+.r4-date-field{margin-bottom:14px; flex-wrap:wrap;}
+.position-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;}
+.pos-card{background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 16px;}
+.pos-card .pc-v{font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--navy);}
+.pos-card .pc-l{font-size:11.5px; color:var(--muted); margin-top:2px;}
+.pos-card .pc-pct{font-size:10.5px; color:#9b9686; margin-top:1px;}
 
 .newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
 .newzone-toggle{display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px 16px; background:var(--slate-soft); border-radius:10px; border:1px solid #cfcbe6;}
@@ -370,7 +376,6 @@ table.daily tr:hover{background:#fbf9f3;}
     <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
     <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</div></div>
     <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็วเลย</div></div>
-    <div class="kpi"><div class="v num" id="r_kpiDailyTotal">–</div><div class="l">ยอดสรรหาทั้งหมด (คน)</div></div>
   </div>
   <p class="report-sub" style="padding:10px 28px 0; max-width:1000px; margin:0 auto;">ข้อ 1-3 นับเฉพาะทีมที่มี <b>สถานะทีม = Active</b> เท่านั้น (ทีมที่ปิด/ไม่ Active จะไม่ถูกนับในรีพอทนี้ แต่ยังแสดงอยู่ในหน้า "กำลังพล" ตามปกติ)</p>
 
@@ -397,6 +402,14 @@ table.daily tr:hover{background:#fbf9f3;}
     <div class="report-block">
       <h2 class="report-h2">4. สรุปจำนวนสรรหารายวัน ตามตำแหน่ง</h2>
       <p class="report-sub">นับทุกรายการในข้อมูลสรรหา (sheet ฝึกงาน) แยกตามตำแหน่ง ไม่จำกัดสถานะ</p>
+      <div class="field r4-date-field">
+        <label for="r_dateFrom">วันที่สรรหา</label>
+        <input type="date" id="r_dateFrom" class="date-input">
+        <span class="date-sep">ถึง</span>
+        <input type="date" id="r_dateTo" class="date-input">
+        <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
+      </div>
+      <div class="position-cards" id="r_positionCards"></div>
       <div class="table-scroll"><table class="report-table" id="r_table_position"></table></div>
     </div>
 
@@ -926,17 +939,50 @@ function riderTable(teams){
   html += '</tbody>';
   return html;
 }
-function positionSummaryTable(){
-  const byPos = P2.totals.by_position;
-  const positions = Object.keys(byPos).sort((a,b)=>byPos[b]-byPos[a]);
+function computePositionStats(fromDate, toDate){
+  const byPos = {};
+  let total = 0;
+  P2.days.forEach(day=>{
+    if(fromDate && day.date < fromDate) return;
+    if(toDate && day.date > toDate) return;
+    Object.entries(day.by_position).forEach(([pos, cnt])=>{
+      byPos[pos] = (byPos[pos]||0) + cnt;
+      total += cnt;
+    });
+  });
+  return { byPos, total };
+}
+function positionCardsHtml(stats){
+  const positions = Object.keys(stats.byPos).sort((a,b)=>stats.byPos[b]-stats.byPos[a]);
+  if(positions.length===0){
+    return '<div class="empty-msg">ไม่มีข้อมูลในช่วงวันที่ที่เลือก</div>';
+  }
+  let html = positions.map(p=>{
+    const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
+    return `<div class="pos-card"><div class="pc-v num">${stats.byPos[p]}</div><div class="pc-l">${p}</div><div class="pc-pct">${pct}% ของยอดรวม</div></div>`;
+  }).join('');
+  html += `<div class="pos-card" style="background:var(--cream-2);"><div class="pc-v num">${stats.total}</div><div class="pc-l">รวมทั้งหมด</div><div class="pc-pct">100%</div></div>`;
+  return html;
+}
+function positionSummaryTable(stats){
+  const positions = Object.keys(stats.byPos).sort((a,b)=>stats.byPos[b]-stats.byPos[a]);
+  if(positions.length===0){
+    return '<tbody><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีข้อมูลในช่วงวันที่ที่เลือก</td></tr></tbody>';
+  }
   let html = `<thead><tr><th>ตำแหน่ง</th><th class="num-cell">จำนวน (คน)</th><th class="num-cell">สัดส่วน</th></tr></thead><tbody>`;
   positions.forEach(p=>{
-    const pct = Math.round(byPos[p]/P2.totals.count*1000)/10;
-    html += `<tr><td>${p}</td><td class="num-cell">${byPos[p]}</td><td class="num-cell">${pct}%</td></tr>`;
+    const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
+    html += `<tr><td>${p}</td><td class="num-cell">${stats.byPos[p]}</td><td class="num-cell">${pct}%</td></tr>`;
   });
-  html += `<tr style="background:var(--cream-2);font-weight:700;"><td>รวม</td><td class="num-cell">${P2.totals.count}</td><td class="num-cell">100%</td></tr>`;
+  html += `<tr style="background:var(--cream-2);font-weight:700;"><td>รวม</td><td class="num-cell">${stats.total}</td><td class="num-cell">100%</td></tr>`;
   html += '</tbody>';
   return html;
+}
+let r_dateFrom = '', r_dateTo = '';
+function renderPositionSection(){
+  const stats = computePositionStats(r_dateFrom, r_dateTo);
+  document.getElementById('r_positionCards').innerHTML = positionCardsHtml(stats);
+  document.getElementById('r_table_position').innerHTML = positionSummaryTable(stats);
 }
 function initReport(){
   const teams = allTeamsFlat().filter(t=>t.is_active!==false); // report counts active teams only
@@ -947,13 +993,26 @@ function initReport(){
   document.getElementById('r_kpiBelow6').textContent = below6.length;
   document.getElementById('r_kpiBelow8').textContent = below8.length;
   document.getElementById('r_kpiNoRider').textContent = noRider.length;
-  document.getElementById('r_kpiDailyTotal').textContent = P2.totals.count;
 
   document.getElementById('r_table_below6').innerHTML = teamListTable(below6, true);
   document.getElementById('r_table_below8').innerHTML = teamListTable(below8, true);
   document.getElementById('r_table_norider').innerHTML = riderTable(noRider);
-  document.getElementById('r_table_position').innerHTML = positionSummaryTable();
+
+  const dfEl = document.getElementById('r_dateFrom');
+  const dtEl = document.getElementById('r_dateTo');
+  dfEl.min = P2.date_range.min; dfEl.max = P2.date_range.max;
+  dtEl.min = P2.date_range.min; dtEl.max = P2.date_range.max;
+  dfEl.value = r_dateFrom; dtEl.value = r_dateTo;
+  renderPositionSection();
 }
+document.getElementById('r_dateFrom').addEventListener('change', (e)=>{ r_dateFrom=e.target.value; renderPositionSection(); });
+document.getElementById('r_dateTo').addEventListener('change', (e)=>{ r_dateTo=e.target.value; renderPositionSection(); });
+document.getElementById('r_dateResetBtn').addEventListener('click', ()=>{
+  r_dateFrom=''; r_dateTo='';
+  document.getElementById('r_dateFrom').value='';
+  document.getElementById('r_dateTo').value='';
+  renderPositionSection();
+});
 
 /* ============ BOOTSTRAP: fetch live data from /api/data ============ */
 function formatThaiDateShort(iso){
