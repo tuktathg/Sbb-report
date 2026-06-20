@@ -145,10 +145,12 @@ table.report-table tr.sev-red td.num-cell{color:var(--red);}
 table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
 .r4-date-field{margin-bottom:0; flex-wrap:wrap;}
 .exec-summary-head{padding:18px 28px 0; max-width:1100px; margin:0 auto;}
-.kpi.kpi-dynamic{border-color:rgba(201,138,44,0.35);}
 .kpi .kpi-pct{font-size:10px; color:#9b9686; font-weight:500;}
 .kpi.kpi-total-card{background:rgba(201,138,44,0.16); border-color:rgba(201,138,44,0.4);}
 .kpi.kpi-total-card .v{color:#e8c27e;}
+.card-section-label{padding:14px 28px 4px; background:var(--navy-2); font-size:12.5px; font-weight:700; color:#c7c2b1; letter-spacing:.02em;}
+.card-section-label:first-of-type{padding-top:18px;}
+.card-section-label .csl-note{font-weight:500; color:#8c8779; font-size:11px;}
 
 .newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
 .newzone-toggle{display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px 16px; background:var(--slate-soft); border-radius:10px; border:1px solid #cfcbe6;}
@@ -374,21 +376,25 @@ table.daily tr:hover{background:#fbf9f3;}
 <section class="page" id="page-report">
   <div class="exec-summary-head">
     <h2 class="report-h2" style="margin-bottom:2px;">สรุปภาพรวมสำหรับผู้บริหาร</h2>
-    <p class="report-sub" style="margin-bottom:10px;">การ์ดทั้งหมดรวมอยู่ที่นี่ที่เดียว เหมาะสำหรับแคปหน้าจอส่งต่อ — รายละเอียดทีมรายตัวอยู่ในตารางด้านล่าง</p>
+    <p class="report-sub" style="margin-bottom:10px;">เหมาะสำหรับแคปหน้าจอส่งต่อ — รายละเอียดทีมรายตัวอยู่ในตารางด้านล่าง</p>
     <div class="field r4-date-field">
-      <label for="r_dateFrom">วันที่สรรหา (สำหรับการ์ดยอดสรรหา)</label>
+      <label for="r_dateFrom">วันที่สรรหา (สำหรับการ์ดยอดสรรหาด้านล่าง)</label>
       <input type="date" id="r_dateFrom" class="date-input">
       <span class="date-sep">ถึง</span>
       <input type="date" id="r_dateTo" class="date-input">
       <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
     </div>
   </div>
+
+  <div class="card-section-label">ทีมที่ต้องเฝ้าระวัง <span class="csl-note">(เฉพาะทีมสถานะ Active)</span></div>
   <div class="kpi-row" id="r_summaryRow">
     <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
     <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</div></div>
     <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็วเลย</div></div>
   </div>
-  <p class="report-sub" style="padding:10px 28px 0; max-width:1100px; margin:0 auto;">การ์ดด้านบนทุกใบ (ทีมขาดกำลังพล + สรุปยอดสรรหาตามตำแหน่ง) แสดงรวมกันในแถวเดียว — การ์ดทีม (3 ใบแรก) นับเฉพาะทีมที่มี <b>สถานะทีม = Active</b> ส่วนการ์ดยอดสรรหา (ใบถัดไป) กรองตามช่วงวันที่ด้านบนได้</p>
+
+  <div class="card-section-label">ยอดสรรหาตามตำแหน่ง <span class="csl-note">(กรองตามช่วงวันที่ด้านบน)</span></div>
+  <div class="kpi-row" id="r_positionRow"></div>
 
   <main id="reportContent">
 
@@ -405,13 +411,7 @@ table.daily tr:hover{background:#fbf9f3;}
     </div>
 
     <div class="report-block">
-      <h2 class="report-h2">3. สรุปจำนวนสรรหารายวัน ตามตำแหน่ง</h2>
-      <p class="report-sub">นับทุกรายการในข้อมูลสรรหา (sheet ฝึกงาน) แยกตามตำแหน่ง ไม่จำกัดสถานะ — กรองได้จากช่องวันที่ด้านบนสุดของหน้า</p>
-      <div class="table-scroll"><table class="report-table" id="r_table_position"></table></div>
-    </div>
-
-    <div class="report-block">
-      <h2 class="report-h2">4. ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</h2>
+      <h2 class="report-h2">3. ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</h2>
       <p class="report-sub">นับจากผลรวมกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) ของแต่ละทีม (เฉพาะทีม Active)</p>
       <div class="table-scroll"><table class="report-table" id="r_table_below8"></table></div>
     </div>
@@ -419,7 +419,7 @@ table.daily tr:hover{background:#fbf9f3;}
   </main>
 
   <footer>
-    <p>รีพอทนี้สรุปจากข้อมูลล่าสุดในไฟล์ ณ ขณะสร้างรายงาน หากแก้ไขเป้าหมายกำลังพลของทีมในหน้า "กำลังพล" รายการข้อ 1 และ 4 จะไม่เปลี่ยนตาม เนื่องจากใช้เกณฑ์ตายตัว (6 คน และ 8 คน) ไม่ใช่เป้าหมายที่ตั้งไว้ของแต่ละทีม</p>
+    <p>รีพอทนี้สรุปจากข้อมูลล่าสุดในไฟล์ ณ ขณะสร้างรายงาน หากแก้ไขเป้าหมายกำลังพลของทีมในหน้า "กำลังพล" รายการข้อ 1 และ 3 จะไม่เปลี่ยนตาม เนื่องจากใช้เกณฑ์ตายตัว (6 คน และ 8 คน) ไม่ใช่เป้าหมายที่ตั้งไว้ของแต่ละทีม</p>
   </footer>
 </section>
 
@@ -955,41 +955,30 @@ function computePositionStats(fromDate, toDate){
   });
   return { byPos, total };
 }
-function injectPositionCardsIntoSummaryRow(stats){
-  const row = document.getElementById('r_summaryRow');
-  row.querySelectorAll('.kpi-dynamic').forEach(el=>el.remove());
+function renderPositionCards(stats){
+  const row = document.getElementById('r_positionRow');
+  row.innerHTML = '';
   const positions = Object.keys(stats.byPos).sort((a,b)=>stats.byPos[b]-stats.byPos[a]);
+  if(positions.length===0){
+    row.innerHTML = '<div class="empty-msg" style="grid-column:1/-1;">ไม่มีข้อมูลในช่วงวันที่ที่เลือก</div>';
+    return;
+  }
   positions.forEach(p=>{
     const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
     const div = document.createElement('div');
-    div.className = 'kpi kpi-dynamic';
+    div.className = 'kpi';
     div.innerHTML = `<div class="v num">${stats.byPos[p]}</div><div class="l">${p} <span class="kpi-pct">(${pct}%)</span></div>`;
     row.appendChild(div);
   });
   const totalDiv = document.createElement('div');
-  totalDiv.className = 'kpi kpi-dynamic kpi-total-card';
+  totalDiv.className = 'kpi kpi-total-card';
   totalDiv.innerHTML = `<div class="v num">${stats.total}</div><div class="l">รวมยอดสรรหา (ตามช่วงวันที่)</div>`;
   row.appendChild(totalDiv);
-}
-function positionSummaryTable(stats){
-  const positions = Object.keys(stats.byPos).sort((a,b)=>stats.byPos[b]-stats.byPos[a]);
-  if(positions.length===0){
-    return '<tbody><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีข้อมูลในช่วงวันที่ที่เลือก</td></tr></tbody>';
-  }
-  let html = `<thead><tr><th>ตำแหน่ง</th><th class="num-cell">จำนวน (คน)</th><th class="num-cell">สัดส่วน</th></tr></thead><tbody>`;
-  positions.forEach(p=>{
-    const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
-    html += `<tr><td>${p}</td><td class="num-cell">${stats.byPos[p]}</td><td class="num-cell">${pct}%</td></tr>`;
-  });
-  html += `<tr style="background:var(--cream-2);font-weight:700;"><td>รวม</td><td class="num-cell">${stats.total}</td><td class="num-cell">100%</td></tr>`;
-  html += '</tbody>';
-  return html;
 }
 let r_dateFrom = '', r_dateTo = '';
 function renderPositionSection(){
   const stats = computePositionStats(r_dateFrom, r_dateTo);
-  injectPositionCardsIntoSummaryRow(stats);
-  document.getElementById('r_table_position').innerHTML = positionSummaryTable(stats);
+  renderPositionCards(stats);
 }
 function initReport(){
   const teams = allTeamsFlat().filter(t=>t.is_active!==false); // report counts active teams only
