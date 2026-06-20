@@ -154,17 +154,25 @@ table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
 .exec-capture .r4-date-field label{font-size:11px; white-space:nowrap; color:var(--muted);}
 .exec-capture .date-input{padding:4px 7px; font-size:11.5px;}
 .exec-capture .reset-btn{padding:4px 9px; font-size:11px;}
-.exec-capture .card-section-label{padding:10px 20px 6px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.02em; background:transparent;}
+.exec-capture .card-section-label{padding:10px 20px 6px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.02em; background:transparent; text-align:center;}
 .exec-capture .card-section-label .csl-note{font-weight:500; color:#9b9686;}
-.exec-capture .kpi-row{display:flex; flex-wrap:wrap; gap:10px; padding:0 20px 16px; background:transparent;}
-.exec-capture .kpi{flex:1 1 150px; max-width:210px; padding:10px 14px; border-radius:10px; background:var(--cream); border:1px solid var(--line);}
-.exec-capture .kpi .v{color:var(--ink); font-size:19px; line-height:1.1;}
-.exec-capture .kpi .v.bad{color:var(--red);}
-.exec-capture .kpi .v.warn{color:#9c6f1f;}
-.exec-capture .kpi .v.good{color:var(--green);}
-.exec-capture .kpi .l{font-size:10.5px; line-height:1.3; margin-top:2px; color:var(--muted);}
+.exec-capture .kpi-row{display:flex; flex-wrap:wrap; justify-content:center; gap:12px; padding:4px 20px 18px; background:transparent;}
+.exec-capture .kpi{flex:1 1 150px; max-width:190px; padding:12px 14px; border-radius:10px; background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--card-accent, var(--line)); box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.exec-capture .kpi .v{color:var(--card-accent, var(--ink)); font-size:20px; line-height:1.1;}
+.exec-capture .kpi .v.bad{color:var(--card-accent, var(--red));}
+.exec-capture .kpi .v.warn{color:var(--card-accent, #9c6f1f);}
+.exec-capture .kpi .v.good{color:var(--card-accent, var(--green));}
+.exec-capture .kpi .l{font-size:10.5px; line-height:1.3; margin-top:3px; color:var(--muted);}
+/* card accent colors, cycling like the reference design */
+#r_summaryRow .kpi:nth-child(1){--card-accent:#c84141;}
+#r_summaryRow .kpi:nth-child(2){--card-accent:#d39a2d;}
+#r_summaryRow .kpi:nth-child(3){--card-accent:#7c5cbf;}
+#r_positionRow .kpi:nth-child(1){--card-accent:#3d7ea6;}
+#r_positionRow .kpi:nth-child(2){--card-accent:#3f8a5f;}
+#r_positionRow .kpi:nth-child(3){--card-accent:#d3762d;}
+#r_positionRow .kpi:nth-child(4){--card-accent:#c98a2c;}
 .exec-capture .kpi .kpi-pct{font-size:9.5px; color:#9b9686;}
-.exec-capture .kpi.kpi-total-card{background:var(--gold-soft); border-color:#e0c281;}
+.exec-capture .kpi.kpi-total-card{background:var(--gold-soft);}
 .exec-capture .kpi.kpi-total-card .v{color:#9c6f1f;}
 
 .newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
