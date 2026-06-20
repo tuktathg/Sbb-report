@@ -152,6 +152,22 @@ table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
 .card-section-label:first-of-type{padding-top:18px;}
 .card-section-label .csl-note{font-weight:500; color:#8c8779; font-size:11px;}
 
+/* ===== Compact executive summary, sized to fit one screenshot ===== */
+.exec-capture{border-radius:0 0 14px 14px; overflow:hidden;}
+.exec-capture .exec-summary-head{padding:14px 20px 10px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+.exec-capture .exec-summary-head .report-h2{margin:0; white-space:nowrap;}
+.exec-capture .r4-date-field{margin:0; gap:6px;}
+.exec-capture .r4-date-field label{font-size:11px; white-space:nowrap;}
+.exec-capture .date-input{padding:4px 7px; font-size:11.5px;}
+.exec-capture .reset-btn{padding:4px 9px; font-size:11px;}
+.exec-capture .card-section-label{padding:8px 20px 3px; font-size:11px;}
+.exec-capture .card-section-label:first-of-type{padding-top:10px;}
+.exec-capture .kpi-row{padding:6px 20px 12px; gap:8px; grid-template-columns:repeat(auto-fit,minmax(118px,1fr));}
+.exec-capture .kpi{padding:8px 10px; border-radius:8px;}
+.exec-capture .kpi .v{font-size:18px; line-height:1.1;}
+.exec-capture .kpi .l{font-size:9.5px; line-height:1.25; margin-top:1px;}
+.exec-capture .kpi .kpi-pct{font-size:8.5px;}
+
 .newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
 .newzone-toggle{display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px 16px; background:var(--slate-soft); border-radius:10px; border:1px solid #cfcbe6;}
 .newzone-toggle h3{margin:0; font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--slate); font-weight:600;}
@@ -374,27 +390,28 @@ table.daily tr:hover{background:#fbf9f3;}
 
 <!-- ============ PAGE 3: REPORT ============ -->
 <section class="page" id="page-report">
-  <div class="exec-summary-head">
-    <h2 class="report-h2" style="margin-bottom:2px;">สรุปภาพรวมสำหรับผู้บริหาร</h2>
-    <p class="report-sub" style="margin-bottom:10px;">เหมาะสำหรับแคปหน้าจอส่งต่อ — รายละเอียดทีมรายตัวอยู่ในตารางด้านล่าง</p>
-    <div class="field r4-date-field">
-      <label for="r_dateFrom">วันที่สรรหา (สำหรับการ์ดยอดสรรหาด้านล่าง)</label>
-      <input type="date" id="r_dateFrom" class="date-input">
-      <span class="date-sep">ถึง</span>
-      <input type="date" id="r_dateTo" class="date-input">
-      <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
+  <div id="execSummaryCapture" class="exec-capture">
+    <div class="exec-summary-head">
+      <h2 class="report-h2">สรุปภาพรวมสำหรับผู้บริหาร</h2>
+      <div class="field r4-date-field">
+        <label for="r_dateFrom">วันที่สรรหา</label>
+        <input type="date" id="r_dateFrom" class="date-input">
+        <span class="date-sep">ถึง</span>
+        <input type="date" id="r_dateTo" class="date-input">
+        <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
+      </div>
     </div>
-  </div>
 
-  <div class="card-section-label">ทีมที่ต้องเฝ้าระวัง <span class="csl-note">(เฉพาะทีมสถานะ Active)</span></div>
-  <div class="kpi-row" id="r_summaryRow">
-    <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
-    <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</div></div>
-    <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็วเลย</div></div>
-  </div>
+    <div class="card-section-label">ทีมที่ต้องเฝ้าระวัง <span class="csl-note">(เฉพาะทีมสถานะ Active)</span></div>
+    <div class="kpi-row" id="r_summaryRow">
+      <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 6 คน</div></div>
+      <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่รวม [F+O+S] ต่ำกว่า 8 คน</div></div>
+      <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็วเลย</div></div>
+    </div>
 
-  <div class="card-section-label">ยอดสรรหาตามตำแหน่ง <span class="csl-note">(กรองตามช่วงวันที่ด้านบน)</span></div>
-  <div class="kpi-row" id="r_positionRow"></div>
+    <div class="card-section-label">ยอดสรรหาตามตำแหน่ง <span class="csl-note">(กรองตามช่วงวันที่ด้านบน)</span></div>
+    <div class="kpi-row" id="r_positionRow"></div>
+  </div><!-- /#execSummaryCapture -->
 
   <main id="reportContent">
 
