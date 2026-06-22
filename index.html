@@ -947,7 +947,7 @@ function teamListTable(teams, sortByGrand){
   if(teams.length===0){
     return '<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีทีมที่เข้าเงื่อนไขนี้</td></tr></tbody>';
   }
-  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ปัจจุบัน</th><th class="num-cell">รอ+ฝึกงาน</th><th class="num-cell">รวม [F+O+S]</th></tr></thead><tbody>`;
+  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ปัจจุบัน</th><th class="num-cell">รอ+ฝึกงาน</th><th class="num-cell">รวม</th></tr></thead><tbody>`;
   teams.forEach(t=>{
     const sevCls = t.grand_total < t.required*0.625 ? 'sev-red' : (t.grand_total < t.required ? 'sev-amber' : '');
     html += `<tr class="${sevCls}"><td>${t.bigregion}</td><td>${t.team}</td><td>${t.head||'-'}</td><td class="num-cell">${t.current_total}</td><td class="num-cell">${t.pending_total+t.training_total}</td><td class="num-cell">${t.grand_total}</td></tr>`;
