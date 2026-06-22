@@ -991,7 +991,7 @@ function renderPositionCards(stats){
     const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
     const div = document.createElement('div');
     div.className = 'kpi';
-    div.innerHTML = `<div class="v num">${stats.byPos[p]}</div><div class="l">${p} <span class="kpi-pct">(${pct}%)</span></div>`;
+    div.innerHTML = `<div class="v num">${stats.byPos[p]}</div><div class="l">${p}</div>`;
     row.appendChild(div);
   });
   const totalDiv = document.createElement('div');
