@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>รายงานร้านค้า &amp; การลาออก BE</title>
+<title>Report BE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -104,8 +104,8 @@
 
   <div class="topbar">
     <div>
-      <h1>รายงานร้านค้า &amp; การลาออก BE</h1>
-      <p class="subtitle">ดึงข้อมูลสดจาก Google Sheets ทุกครั้งที่เปิดหน้านี้ — ไม่ต้องอัปโหลดไฟล์</p>
+      <h1>Report BE</h1>
+      <p class="subtitle">—</p>
     </div>
     <div class="status-box">
       <span class="dot" id="statusDot"></span>
@@ -120,7 +120,7 @@
   <div id="content" style="display:none;">
 
     <div class="tabs">
-      <button class="tab-btn active" data-page="page1">1. ร้านค้าทั้งหมด</button>
+      <button class="tab-btn active" data-page="page1">ร้านค้าทั้งหมด</button>
       <button class="tab-btn" data-page="page2">2. การลาออก (2026)</button>
       <button class="tab-btn" data-page="page3">3. สรรหา</button>
       <button class="tab-btn" data-page="page4">4. สรรหา (ไม่รวมค่าติดลบ)</button>
@@ -149,19 +149,17 @@
 
       <div class="panel">
         <h2>ประเภทเบียร์ — จำนวนร้าน</h2>
-        <p class="desc">จัดกลุ่มจากคอลัมน์ประเภทเบียร์ในชีต "ร้านที่ต้องสรรหา": มีคำว่า "เบียร์สด" = เบียร์สด นอกนั้นถือเป็นเบียร์ขวด — คลิกที่วงกลมเพื่อดูเฉพาะประเภทนั้น (คลิกซ้ำเพื่อยกเลิก) จะกรองตารางด้านล่างให้ด้วย</p>
         <div class="chart-box" style="height:220px;"><canvas id="beerTypeChart"></canvas></div>
       </div>
 
       <div class="panel">
         <h2>BE ที่ต้องสรรหา — แยกตามจำนวนวันว่าง</h2>
-        <p class="desc">นับเฉพาะร้านสถานะ "สรรหา" จัดกลุ่มตามระยะเวลาที่ว่างแล้วแยกสีตามว่าร้านนั้นเคยมี BE ทำงานมาก่อนหรือไม่ — ยิ่งแท่งขวาสุดสูง ยิ่งมีร้านที่ว่างนานผิดปกติเยอะ</p>
+        <p class="desc">นับเฉพาะร้านสถานะ "สรรหา" จัดกลุ่มตามระยะเวลาที่ว่างแล้วแยกสีตามว่าร้านนั้นเคยมี BE ทำงานมาก่อนหรือไม่</p>
         <div class="chart-box" style="height:260px;"><canvas id="vacancyChart"></canvas></div>
       </div>
 
       <div class="panel">
-        <h2>ร้านที่ต้องสรรหา — เคยมี BE ทำงานอยู่หรือไม่</h2>
-        <p class="desc">จับคู่รหัสร้านจากชีต "ร้านที่ต้องสรรหา" กับประวัติเช็คอินทั้งหมดในชีต "BE" — ถ้ารหัสร้านเคยปรากฏใน log เช็คอิน แปลว่าเคยมี BE ประจำร้านนี้มาก่อน (ถ้าร้านไหนมี 2 แถว หมายถึงร้านนั้นต้องการ BE 2 คน)</p>
+        <h2>ร้านที่ต้องสรรหา</h2>
         <div class="controls">
           <div class="seg" id="statusFilterSeg">
             <button data-val="สรรหา" class="active">เฉพาะสถานะ "สรรหา"</button>
@@ -224,8 +222,8 @@
       </div>
 
       <div class="panel">
-        <h2>การลาออกแยกโซน ตามเดือน + อัตราลาออกต่อร้าน</h2>
-        <p class="desc">จำนวนคนลาออกต่อโซนต่อเดือน (2026) เทียบกับจำนวนร้านทั้งหมดในโซนนั้น — % turnover = จำนวนคนลาออกทั้งปี ÷ จำนวนร้านทั้งหมด — คลิกที่ชื่อโซนเพื่อดูพื้นที่ย่อยในโซนนั้น และกรองข้อมูลด้านล่างทั้งหมด</p>
+        <h2>การลาออกแยกโซน</h2>
+        <p class="desc">จำนวนคนลาออก (2026) เทียบกับจำนวนร้านทั้งหมดในโซนนั้น — % turnover = จำนวนคนลาออกทั้งปี ÷ จำนวนร้านทั้งหมด — คลิกที่ชื่อโซนเพื่อดูพื้นที่ย่อยในโซนนั้น</p>
         <div class="tablewrap" style="max-height:420px;">
           <table>
             <thead><tr id="zoneMonthHeadRow"><th>โซน</th></tr></thead>
@@ -235,8 +233,8 @@
       </div>
 
       <div class="panel" id="areaMonthPanel" style="display:none;">
-        <h2 id="areaMonthTitle">การลาออกแยกพื้นที่ ตามเดือน + อัตราลาออกต่อร้าน</h2>
-        <p class="desc">แสดงทุกโซนตามค่าเริ่มต้น — คลิกชื่อโซนในตารางด้านบนเพื่อกรองให้เหลือเฉพาะพื้นที่ในโซนนั้น คลิกชื่อพื้นที่เพื่อกรองข้อมูลทั้งหน้าต่อ <span id="rawAreaClearWrap" style="display:none;">— <button class="refresh" id="clearRawAreaBtn" style="padding:3px 10px;">✕ ล้างตัวกรองพื้นที่นี้</button></span></p>
+        <h2 id="areaMonthTitle">การลาออกแยกพื้นที่</h2>
+        <p class="desc"> —  <span id="rawAreaClearWrap" style="display:none;">— <button class="refresh" id="clearRawAreaBtn" style="padding:3px 10px;">✕ ล้างตัวกรองพื้นที่นี้</button></span></p>
         <div class="tablewrap" style="max-height:420px;">
           <table>
             <thead><tr id="areaMonthHeadRow"><th>พื้นที่</th></tr></thead>
@@ -246,8 +244,8 @@
       </div>
 
       <div class="panel" id="storeMonthPanel" style="display:none;">
-        <h2 id="storeMonthTitle">การลาออกแยกร้าน ตามเดือน</h2>
-        <p class="desc">แสดงเมื่อเลือกโซนแล้วเท่านั้น — เฉพาะร้านที่มีคนลาออกจริงในโซน (หรือพื้นที่ ถ้าเลือกไว้ด้วย) นี้เท่านั้น</p>
+        <h2 id="storeMonthTitle">การลาออกแยกร้าน</h2>
+        <p class="desc"> —</p>
         <div class="tablewrap" style="max-height:420px;">
           <table>
             <thead><tr id="storeMonthHeadRow"><th>ร้าน</th></tr></thead>
@@ -258,13 +256,11 @@
 
       <div class="panel">
         <h2>ประเภทร้านที่ลาออก</h2>
-        <p class="desc">ประเภทร้านมาจากชีต "BE ทั้งหมด" (คอลัมน์ประเภทร้าน) ของร้านล่าสุดที่ BE คนนั้นทำงานอยู่</p>
         <div class="barlist" id="typeBreakdown"></div>
       </div>
 
       <div class="panel" id="areaDetailPanel" style="display:none;">
         <h2 id="areaDetailTitle">ร้านทั้งหมดในพื้นที่</h2>
-        <p class="desc">รายชื่อร้านทั้งหมดในพื้นที่นี้ (จากชีต "ร้านที่ต้องสรรหา") — คลิกพื้นที่อื่นในกราฟด้านบนเพื่อดูพื้นที่อื่น หรือกด "ล้างตัวกรองพื้นที่" เพื่อปิด</p>
         <div class="controls">
           <select id="areaDetailStatusFilter"><option value="ALL">ทุกสถานะ</option></select>
           <select id="areaDetailTypeFilter"><option value="ALL">ทุกประเภทร้าน</option></select>
@@ -281,7 +277,6 @@
 
       <div class="panel" id="typeDetailPanel" style="display:none;">
         <h2 id="typeDetailTitle">ร้านที่ลาออกในประเภทที่เลือก</h2>
-        <p class="desc">รายชื่อร้าน ชื่อร้าน และพื้นที่ ที่มีคนลาออกในประเภทร้านนี้ — คลิกประเภทอื่นด้านบนเพื่อดูประเภทอื่น หรือกด "ล้างตัวกรองประเภทร้าน" เพื่อปิด</p>
         <div class="controls">
           <input type="text" id="typeDetailSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน / พื้นที่...">
           <span class="count-pill" id="typeDetailCount"></span>
@@ -320,8 +315,8 @@
       </div>
 
       <div class="panel">
-        <h2>3. อายุงาน ณ วันที่ลาออก</h2>
-        <p class="desc">คำนวณจากวันที่เช็คอินครั้งแรก ถึงวันทำงานล่าสุดของแต่ละคนในประวัติเช็คอิน — หมายเหตุ: ถ้าใครเริ่มงานก่อนช่วงที่ log เริ่มเก็บข้อมูล ตัวเลขนี้จะน้อยกว่าอายุงานจริง</p>
+        <h2>อายุงาน ณ วันที่ลาออก</h2>
+        <p class="desc">คำนวณจากวันที่เช็คอินครั้งแรก ถึงวันทำงานล่าสุดของแต่ละคนในประวัติเช็คอิน</p>
         <div class="barlist" id="tenureBreakdown"></div>
       </div>
 
@@ -368,12 +363,7 @@
       </div>
 
       <div class="panel">
-        <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
-        <p class="desc">
-          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ BB จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
-          วันเริ่มงาน: ใช้คอลัมน์ BA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่าง จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
-          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการตามข้อมูล BA/BB ของแต่ละแถว
-        </p>
+        <h2>ระยะเวลาการเติม BE </h2>
         <div class="controls">
           <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
           <span class="count-pill" id="fillCount"></span>
@@ -407,10 +397,7 @@
       </div>
 
       <div class="panel">
-        <h2>ระยะเวลาการเติม BE แต่ละร้าน (ไม่รวมค่าติดลบ)</h2>
-        <p class="desc">
-          เหมือนหน้า "3. สรรหา" ทุกอย่าง แต่ตัดรายการที่ระยะเวลาติดลบออก (กรณีข้อมูลจับคู่ผิดพลาด ทำให้วันเริ่มงานมาก่อนวันตำแหน่งว่าง) เหลือเฉพาะรายการที่ระยะเวลาเป็น 0 วันขึ้นไป
-        </p>
+        <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <div class="controls">
           <input type="text" id="fillCleanSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
           <span class="count-pill" id="fillCleanCount"></span>
