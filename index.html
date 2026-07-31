@@ -358,15 +358,15 @@
         </div>
         <div class="kpi warn">
           <div class="num" id="kpiFillAvg">–</div>
-          <div class="label">ระยะเวลาเติม BE เฉลี่ย (วัน)</div>
+          <div class="label">จำนวนวันสรรหาเฉลี่ย (วัน)</div>
         </div>
         <div class="kpi">
-          <div class="num" id="kpiFillMedian">–</div>
-          <div class="label">ระยะเวลาเติม BE มัธยฐาน (วัน)</div>
+          <div class="num" id="kpiFillMin">–</div>
+          <div class="label">ต่ำสุด (วัน)</div>
         </div>
         <div class="kpi warn">
           <div class="num" id="kpiFillMax">–</div>
-          <div class="label">นานสุด (วัน)</div>
+          <div class="label">สูงสุด (วัน)</div>
         </div>
       </div>
 
@@ -751,14 +751,12 @@ function renderFillTimeReport(){
   document.getElementById('kpiFillCount').textContent = allDays.length.toLocaleString();
   if(allDays.length){
     const avg = allDays.reduce((a,b)=>a+b,0)/allDays.length;
-    const mid = Math.floor(allDays.length/2);
-    const median = allDays.length%2 ? allDays[mid] : (allDays[mid-1]+allDays[mid])/2;
     document.getElementById('kpiFillAvg').textContent = avg.toFixed(1);
-    document.getElementById('kpiFillMedian').textContent = median.toFixed(1);
+    document.getElementById('kpiFillMin').textContent = allDays[0].toLocaleString();
     document.getElementById('kpiFillMax').textContent = allDays[allDays.length-1].toLocaleString();
   } else {
     document.getElementById('kpiFillAvg').textContent = '-';
-    document.getElementById('kpiFillMedian').textContent = '-';
+    document.getElementById('kpiFillMin').textContent = '-';
     document.getElementById('kpiFillMax').textContent = '-';
   }
 }
