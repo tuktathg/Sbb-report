@@ -352,10 +352,6 @@
     <!-- ================= PAGE 3 ================= -->
     <div class="page" id="page3">
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="num" id="kpiFillCount">–</div>
-          <div class="label">ร้านที่คำนวณระยะเวลาได้ (รวมร้านที่ยังไม่มีคนเริ่มงาน นับถึงวันนี้)</div>
-        </div>
         <div class="kpi warn">
           <div class="num" id="kpiFillAvg">–</div>
           <div class="label">จำนวนวันสรรหาเฉลี่ย (วัน)</div>
@@ -375,7 +371,7 @@
         <p class="desc">
           วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AZ จากชีต "ร้านที่ต้องสรรหา" เป็นหลัก — แต่ถ้ามีวันที่ในคอลัมน์ J ของชีต "master_BE" (เฉพาะแถวสถานะ "ลาออก" ในคอลัมน์ C ของร้านนั้น) ที่ใหม่กว่า จะใช้วันที่จาก master_BE แทน
           วันเริ่มงาน: ใช้แถวแรกที่สถานะเป็น "ทำงานอยู่" ของร้านนั้นในชีต "master_BE" ดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) — ถ้ายังไม่มีคนเริ่มงาน จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
-          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ
+          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ โดยแจกวันเริ่มงานที่เจอใน master_BE ให้ทีละแถวตามลำดับ (ถ้ามีคนทำงานอยู่แค่ 1 คน แถวแรกจะได้วันเริ่มงาน ส่วนแถวที่เหลือยังนับถึงวันปัจจุบันต่อ)
         </p>
         <div class="controls">
           <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
@@ -655,7 +651,10 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
     if(!storeCode) return;
     if(status === 'ทำงานอยู่'){
       const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
-      if(startDate && !masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, startDate);
+      if(startDate){
+        if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, []);
+        masterBEStartDateMap.get(storeCode).push(startDate);
+      }
     }
     if(status === 'ลาออก'){
       const resignDate = parseFlexibleDate(r[9], false);
@@ -715,8 +714,9 @@ function renderFillTimeReport(){
     let vacancyDate = azDate;
     if(masterDate && (!vacancyDate || masterDate > vacancyDate)) vacancyDate = masterDate;
     if(!vacancyDate) return;
-    const startDate = masterBEStartDateMap.get(storeCode) || null;
+    const startDateQueue = [...(masterBEStartDateMap.get(storeCode) || [])];
     recruitRows.forEach(x=>{
+      const startDate = startDateQueue.length ? startDateQueue.shift() : null;
       const days = startDate
         ? Math.round((startDate - vacancyDate) / 86400000)
         : Math.round((today - vacancyDate) / 86400000);
@@ -748,7 +748,6 @@ function renderFillTimeReport(){
     </tr>`).join('');
 
   const allDays = rows.map(x=>x.days).sort((a,b)=>a-b);
-  document.getElementById('kpiFillCount').textContent = allDays.length.toLocaleString();
   if(allDays.length){
     const avg = allDays.reduce((a,b)=>a+b,0)/allDays.length;
     document.getElementById('kpiFillAvg').textContent = avg.toFixed(1);
