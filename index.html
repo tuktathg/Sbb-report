@@ -749,7 +749,6 @@ function selectAreaFilter(area){
   renderStoreMonthlyChart();
   populateFilters();
   updateDetailPanels();
-  scrollToVisibleDetailPanel();
 }
 
 function clearAreaFilter(){
@@ -839,7 +838,6 @@ function selectTypeFilter(type){
   renderReport2();
   renderBreakdowns();
   updateDetailPanels();
-  scrollToVisibleDetailPanel();
 }
 
 function clearTypeFilter(){
@@ -1388,30 +1386,32 @@ function renderStoreMonthlyChart(){
   const storeMonthCounts = new Map();
   const storeTotals = new Map();
   const storeNames = new Map();
+  const storeAreas = new Map();
   rows.forEach(x=>{
     const code = x.store || 'ไม่ทราบรหัส';
     if(!storeMonthCounts.has(code)) storeMonthCounts.set(code, new Array(12).fill(0));
     if(x.lastDate) storeMonthCounts.get(code)[x.lastDate.getMonth()]++;
     storeTotals.set(code, (storeTotals.get(code)||0)+1);
     if(!storeNames.has(code)) storeNames.set(code, x.storeName || '-');
+    if(!storeAreas.has(code)) storeAreas.set(code, x.rawArea || '-');
   });
 
   let storeSummaries = [...storeTotals.keys()].map(code=>({
-    code, name: storeNames.get(code) || '-', total: storeTotals.get(code) || 0
+    code, name: storeNames.get(code) || '-', area: storeAreas.get(code) || '-', total: storeTotals.get(code) || 0
   }));
-  const storeAccessors = { code:x=>x.code||'', name:x=>x.name||'', total:x=>x.total };
+  const storeAccessors = { name:x=>x.name||'', area:x=>x.area||'', total:x=>x.total };
   storeSummaries = applySort(storeSummaries, storeSortState, storeAccessors);
   const maxMonthCount = Math.max(1, ...storeSummaries.flatMap(s=> storeMonthCounts.get(s.code)||[]));
 
   const headRow = document.getElementById('storeMonthHeadRow');
-  headRow.innerHTML = '<th data-sort="code">รหัสร้าน</th><th data-sort="name">ชื่อร้าน</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th>';
+  headRow.innerHTML = '<th data-sort="name">ชื่อร้าน</th><th data-sort="area">พื้นที่</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th>';
   attachSortableHeaders('storeMonthHeadRow', storeSortState, renderStoreMonthlyChart);
 
-  document.getElementById('storeMonthBody').innerHTML = storeSummaries.map(({code,name,total})=>{
+  document.getElementById('storeMonthBody').innerHTML = storeSummaries.map(({code,name,area,total})=>{
     const counts = storeMonthCounts.get(code) || new Array(12).fill(0);
     return `<tr>
-      <td>${code}</td>
       <td>${name}</td>
+      <td>${area}</td>
       ${counts.map(c=>{
         const intensity = c/maxMonthCount;
         const bg = c>0 ? `rgba(201,121,12,${0.12 + intensity*0.55})` : 'transparent';
