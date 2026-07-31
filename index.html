@@ -663,6 +663,16 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
       }
     }
   });
+  masterBEStartDateMap.forEach((list, code)=>{
+    const seen = new Set();
+    const deduped = list.filter(d=>{
+      const key = d.getTime();
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    masterBEStartDateMap.set(code, deduped);
+  });
 
   resigned2026 = [...empMap.values()].filter(e=>
     e.status === 'ลาออก' && e.lastDate && e.lastDate.getFullYear() === 2026
