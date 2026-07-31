@@ -354,7 +354,7 @@
       <div class="kpi-grid">
         <div class="kpi">
           <div class="num" id="kpiFillCount">–</div>
-          <div class="label">ร้านที่คำนวณระยะเวลาเติม BE ได้ (มีทั้งวันว่าง + วันเริ่มงาน)</div>
+          <div class="label">ร้านที่คำนวณระยะเวลาได้ (รวมร้านที่ยังไม่มีคนเริ่มงาน นับถึงวันนี้)</div>
         </div>
         <div class="kpi warn">
           <div class="num" id="kpiFillAvg">–</div>
@@ -373,9 +373,9 @@
       <div class="panel">
         <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <p class="desc">
-          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
-          เทียบกับวันเริ่มงานจริงจากชีต "master_BE" — ใช้แถวแรกที่สถานะ (คอลัมน์ C) เป็น "ทำงานอยู่" ของร้านนั้น แล้วดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) จับคู่กันด้วยรหัสร้าน —
-          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น ร้านอื่นนอกเหนือจากนี้จะไม่แสดง — และแสดงเฉพาะรายการที่มีข้อมูลครบทั้งสองฝั่งด้วย — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ จับคู่กับวันเริ่มงานคนละคนกัน
+          วันที่ตำแหน่งว่าง: ใช้วันที่ล่าสุดในคอลัมน์ J ของชีต "master_BE" เฉพาะแถวที่สถานะ (คอลัมน์ C) เป็น "ลาออก" ของร้านนั้น — ถ้าไม่มีแถวที่แมช ใช้คอลัมน์ AZ จากชีต "ร้านที่ต้องสรรหา" แทน
+          วันเริ่มงาน: ใช้แถวแรกที่สถานะเป็น "ทำงานอยู่" ของร้านนั้นในชีต "master_BE" ดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) — ถ้ายังไม่มีคนเริ่มงาน จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
+          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ
         </p>
         <div class="controls">
           <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
@@ -417,6 +417,7 @@ let recruitStoreCodeSet = new Set();
 let recruitBeerTypeMap = new Map();
 let hrStartDateMap = new Map();
 let masterBEStartDateMap = new Map();
+let masterBEResignDateMap = new Map();
 let resigned2026 = [];
 
 const statusDot = document.getElementById('statusDot');
@@ -614,13 +615,13 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
     if(!r) return null;
     const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').trim(), storeName=r[2]||'',
           jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||''),
-          vacancyDate = parseDMY(r[26]) || parseDMY(r[51]);
+          azDate = parseDMY(r[51]);
     if(!storeCode) return null;
     if(area) recruitStoreAreaMap.set(storeCode, area);
     if(rawArea) recruitStoreRawAreaMap.set(storeCode, rawArea);
     if(r[23]) recruitBeerTypeMap.set(storeCode, beerType);
     recruitStoreCodeSet.add(storeCode);
-    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, vacancyDate, hadBE: storeCodeSet.has(storeCode) };
+    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, azDate, hadBE: storeCodeSet.has(storeCode) };
   }).filter(Boolean);
 
   const chosenByStore = new Map();
@@ -646,14 +647,22 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   hrStartDateMap.forEach(list=> list.sort((a,b)=>a-b));
 
   masterBEStartDateMap = new Map();
+  masterBEResignDateMap = new Map();
   masterRows.forEach(r=>{
     if(!r) return;
     const status = (r[2]||'').trim();
-    if(status !== 'ทำงานอยู่') return;
     const storeCode = (r[11]||'').trim();
-    const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
-    if(!storeCode || !startDate) return;
-    if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, startDate);
+    if(!storeCode) return;
+    if(status === 'ทำงานอยู่'){
+      const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
+      if(startDate && !masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, startDate);
+    }
+    if(status === 'ลาออก'){
+      const resignDate = parseFlexibleDate(r[9], false);
+      if(resignDate && (!masterBEResignDateMap.has(storeCode) || resignDate > masterBEResignDateMap.get(storeCode))){
+        masterBEResignDateMap.set(storeCode, resignDate);
+      }
+    }
   });
 
   resigned2026 = [...empMap.values()].filter(e=>
@@ -692,19 +701,23 @@ function renderFillTimeReport(){
 
   const byStore = new Map();
   window.__recruit.forEach(x=>{
-    if(!x.vacancyDate) return;
     if(!byStore.has(x.storeCode)) byStore.set(x.storeCode, []);
     byStore.get(x.storeCode).push(x);
   });
 
+  const today = new Date();
   let rows = [];
   byStore.forEach((recruitRows, storeCode)=>{
     if(!recruitStoreCodeSet.has(storeCode)) return;
-    const startDate = masterBEStartDateMap.get(storeCode);
-    if(!startDate) return;
+    const azDate = recruitRows.map(x=>x.azDate).find(d=>d) || null;
+    const vacancyDate = masterBEResignDateMap.get(storeCode) || azDate;
+    if(!vacancyDate) return;
+    const startDate = masterBEStartDateMap.get(storeCode) || null;
     recruitRows.forEach(x=>{
-      const days = Math.round((startDate - x.vacancyDate) / 86400000);
-      rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate:x.vacancyDate, startDate, days });
+      const days = startDate
+        ? Math.round((startDate - vacancyDate) / 86400000)
+        : Math.round((today - vacancyDate) / 86400000);
+      rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate, startDate, days });
     });
   });
 
@@ -727,7 +740,7 @@ function renderFillTimeReport(){
       <td>${x.area||'-'}</td>
       <td>${x.rawArea||'-'}</td>
       <td>${fmtDate(x.vacancyDate)}</td>
-      <td>${fmtDate(x.startDate)}</td>
+      <td>${x.startDate ? fmtDate(x.startDate) : '-'}</td>
       <td style="font-weight:600;">${x.days}</td>
     </tr>`).join('');
 
