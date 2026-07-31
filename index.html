@@ -706,6 +706,7 @@ function renderFillTimeReport(){
   });
 
   const today = new Date();
+  today.setHours(0,0,0,0);
   let rows = [];
   byStore.forEach((recruitRows, storeCode)=>{
     if(!recruitStoreCodeSet.has(storeCode)) return;
