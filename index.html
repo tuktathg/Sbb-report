@@ -122,6 +122,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-page="page1">1. ร้านค้าทั้งหมด</button>
       <button class="tab-btn" data-page="page2">2. การลาออก (2026)</button>
+      <button class="tab-btn" data-page="page3">3. สรรหา</button>
     </div>
 
     <!-- ================= PAGE 1 ================= -->
@@ -348,6 +349,49 @@
       </div>
     </div>
 
+    <!-- ================= PAGE 3 ================= -->
+    <div class="page" id="page3">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="num" id="kpiFillCount">–</div>
+          <div class="label">ร้านที่คำนวณระยะเวลาเติม BE ได้ (มีทั้งวันว่าง + วันเริ่มงาน)</div>
+        </div>
+        <div class="kpi warn">
+          <div class="num" id="kpiFillAvg">–</div>
+          <div class="label">ระยะเวลาเติม BE เฉลี่ย (วัน)</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiFillMedian">–</div>
+          <div class="label">ระยะเวลาเติม BE มัธยฐาน (วัน)</div>
+        </div>
+        <div class="kpi warn">
+          <div class="num" id="kpiFillMax">–</div>
+          <div class="label">นานสุด (วัน)</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
+        <p class="desc">
+          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
+          เทียบกับวันนัดเริ่มงานจริงจากชีต "รายชื่อ-BE-HR" (คอลัมน์ AB) จับคู่กันด้วยรหัสร้าน —
+          แสดงเฉพาะร้านที่มีข้อมูลครบทั้งสองฝั่งเท่านั้น
+        </p>
+        <div class="controls">
+          <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
+          <span class="count-pill" id="fillCount"></span>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr id="fillHeadRow">
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันนัดเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
+            </tr></thead>
+            <tbody id="fillBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="foot-note" style="margin-top:4px;" id="syncFoot"></div>
@@ -361,6 +405,7 @@ if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
 const SPREADSHEET_ID = "1zYZFaFEups9XDVs2yw_ve4E0JNPCEKalnt8yh-_rwV0";
 const GID_BE_ALL = "812175426";
 const GID_RECRUIT = "140398926";
+const GID_HR = "748651713";
 
 let empMap = new Map();
 let storeCodeSet = new Set();
@@ -369,6 +414,7 @@ let recruitStoreAreaMap = new Map();
 let recruitStoreRawAreaMap = new Map();
 let recruitStoreCodeSet = new Set();
 let recruitBeerTypeMap = new Map();
+let hrStartDateMap = new Map();
 let resigned2026 = [];
 
 const statusDot = document.getElementById('statusDot');
@@ -499,9 +545,10 @@ function dedupeRows(rows){
   return out;
 }
 
-function processData(beAllRowsRaw, recruitRowsRaw){
+function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw){
   const beAllRows = dedupeRows(beAllRowsRaw);
   const recruitRows = dedupeRows(recruitRowsRaw);
+  const hrRows = dedupeRows(hrRowsRaw || []);
   empMap = new Map();
   storeCodeSet = new Set();
   storeTypeProvinceMap = new Map();
@@ -542,13 +589,14 @@ function processData(beAllRowsRaw, recruitRowsRaw){
   window.__recruit = recruitRows.map(r=>{
     if(!r) return null;
     const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').trim(), storeName=r[2]||'',
-          jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||'');
+          jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||''),
+          vacancyDate = parseDMY(r[26]) || parseDMY(r[51]);
     if(!storeCode) return null;
     if(area) recruitStoreAreaMap.set(storeCode, area);
     if(rawArea) recruitStoreRawAreaMap.set(storeCode, rawArea);
     if(r[23]) recruitBeerTypeMap.set(storeCode, beerType);
     recruitStoreCodeSet.add(storeCode);
-    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, hadBE: storeCodeSet.has(storeCode) };
+    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, vacancyDate, hadBE: storeCodeSet.has(storeCode) };
   }).filter(Boolean);
 
   const chosenByStore = new Map();
@@ -561,6 +609,17 @@ function processData(beAllRowsRaw, recruitRowsRaw){
     }
   });
   window.__recruitByStore = [...chosenByStore.values()];
+
+  hrStartDateMap = new Map();
+  hrRows.forEach(r=>{
+    if(!r) return;
+    const storeCode = (r[8]||'').trim();
+    const startDate = parseDMY(r[27]);
+    if(!storeCode || !startDate) return;
+    if(!hrStartDateMap.has(storeCode)) hrStartDateMap.set(storeCode, []);
+    hrStartDateMap.get(storeCode).push(startDate);
+  });
+  hrStartDateMap.forEach(list=> list.sort((a,b)=>a-b));
 
   resigned2026 = [...empMap.values()].filter(e=>
     e.status === 'ลาออก' && e.lastDate && e.lastDate.getFullYear() === 2026
@@ -589,6 +648,59 @@ function processData(beAllRowsRaw, recruitRowsRaw){
   renderAreaMonthlyChart();
   renderStoreMonthlyChart();
   populateFilters();
+  renderFillTimeReport();
+}
+
+const fillSortState = { key:'days', dir:-1 };
+function renderFillTimeReport(){
+  const search = document.getElementById('fillSearch').value.trim().toLowerCase();
+  let rows = window.__recruitByStore.map(x=>{
+    if(!x.vacancyDate) return null;
+    const candidates = hrStartDateMap.get(x.storeCode) || [];
+    if(!candidates.length) return null;
+    let startDate = candidates.find(d=> d >= x.vacancyDate);
+    if(!startDate) startDate = candidates[candidates.length-1];
+    const days = Math.round((startDate - x.vacancyDate) / 86400000);
+    return { storeCode:x.storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate:x.vacancyDate, startDate, days };
+  }).filter(Boolean);
+
+  if(search) rows = rows.filter(x=>
+    (x.storeName||'').toLowerCase().includes(search) || (x.storeCode||'').toLowerCase().includes(search)
+  );
+
+  const fillAccessors = {
+    storeCode:x=>x.storeCode||'', storeName:x=>x.storeName||'', area:x=>x.area||'', rawArea:x=>x.rawArea||'',
+    vacancyDate:x=>x.vacancyDate?x.vacancyDate.getTime():0, startDate:x=>x.startDate?x.startDate.getTime():0, days:x=>x.days
+  };
+  rows = applySort(rows, fillSortState, fillAccessors);
+  attachSortableHeaders('fillHeadRow', fillSortState, renderFillTimeReport);
+
+  document.getElementById('fillCount').textContent = `แสดง ${rows.length.toLocaleString()} ร้าน`;
+  document.getElementById('fillBody').innerHTML = rows.map(x=>`
+    <tr>
+      <td>${x.storeCode}</td>
+      <td>${x.storeName||'-'}</td>
+      <td>${x.area||'-'}</td>
+      <td>${x.rawArea||'-'}</td>
+      <td>${fmtDate(x.vacancyDate)}</td>
+      <td>${fmtDate(x.startDate)}</td>
+      <td style="font-weight:600;">${x.days}</td>
+    </tr>`).join('');
+
+  const allDays = rows.map(x=>x.days).sort((a,b)=>a-b);
+  document.getElementById('kpiFillCount').textContent = allDays.length.toLocaleString();
+  if(allDays.length){
+    const avg = allDays.reduce((a,b)=>a+b,0)/allDays.length;
+    const mid = Math.floor(allDays.length/2);
+    const median = allDays.length%2 ? allDays[mid] : (allDays[mid-1]+allDays[mid])/2;
+    document.getElementById('kpiFillAvg').textContent = avg.toFixed(1);
+    document.getElementById('kpiFillMedian').textContent = median.toFixed(1);
+    document.getElementById('kpiFillMax').textContent = allDays[allDays.length-1].toLocaleString();
+  } else {
+    document.getElementById('kpiFillAvg').textContent = '-';
+    document.getElementById('kpiFillMedian').textContent = '-';
+    document.getElementById('kpiFillMax').textContent = '-';
+  }
 }
 
 function renderPage1KPIs(){
@@ -1475,6 +1587,7 @@ document.getElementById('scopeFilterSeg').addEventListener('click', e=>{
   refreshPage2();
 });
 document.getElementById('searchStore').addEventListener('input', renderReport1);
+document.getElementById('fillSearch').addEventListener('input', renderFillTimeReport);
 document.getElementById('recruitGroupFilter').addEventListener('change', e=>{ recruitGroupFilterVal = e.target.value; renderReport1(); });
 document.getElementById('report1ZoneFilter').addEventListener('change', e=>{ report1ZoneVal = e.target.value; renderReport1(); });
 document.getElementById('report1AreaFilter').addEventListener('change', e=>{ report1AreaVal = e.target.value; renderReport1(); });
@@ -1524,8 +1637,8 @@ async function loadAll(){
   errorBox.style.display = 'none';
   content.style.display = 'none';
   try{
-    const [beAllRows, recruitRows] = await Promise.all([fetchGviz(GID_BE_ALL), fetchGviz(GID_RECRUIT)]);
-    processData(beAllRows, recruitRows);
+    const [beAllRows, recruitRows, hrRows] = await Promise.all([fetchGviz(GID_BE_ALL), fetchGviz(GID_RECRUIT), fetchGviz(GID_HR)]);
+    processData(beAllRows, recruitRows, hrRows);
     loadingBox.style.display = 'none';
     content.style.display = 'block';
     statusDot.className = 'dot live';
