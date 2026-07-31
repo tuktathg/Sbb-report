@@ -649,7 +649,7 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
     if(!r) return null;
     const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').replace(/\s+/g,'').trim(), storeName=r[2]||'',
           jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||''),
-          azDate = parseFlexibleDate(r[51], true), vacancyDateBB = parseFlexibleDate(r[53], false), startDateBA = parseFlexibleDate(r[52], false);
+          azDate = parseFlexibleDate(r[51], false), vacancyDateBB = parseFlexibleDate(r[53], false), startDateBA = parseFlexibleDate(r[52], false);
     if(!storeCode) return null;
     if(area) recruitStoreAreaMap.set(storeCode, area);
     if(rawArea) recruitStoreRawAreaMap.set(storeCode, rawArea);
