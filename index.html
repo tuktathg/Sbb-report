@@ -647,7 +647,7 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   recruitBeerTypeMap = new Map();
   window.__recruit = recruitRows.map(r=>{
     if(!r) return null;
-    const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').trim(), storeName=r[2]||'',
+    const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').replace(/\s+/g,'').trim(), storeName=r[2]||'',
           jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||''),
           azDate = parseDMY(r[51]);
     if(!storeCode) return null;
@@ -684,17 +684,17 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   masterBEResignDateMap = new Map();
   masterRows.forEach(r=>{
     if(!r) return;
-    const status = (r[2]||'').trim();
-    const storeCode = (r[11]||'').trim();
+    const status = (r[2]||'').replace(/\s+/g,' ').trim();
+    const storeCode = (r[11]||'').replace(/\s+/g,'').trim();
     if(!storeCode) return;
-    if(status === 'ทำงานอยู่'){
+    if(status.includes('ทำงานอยู่')){
       const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
       if(startDate){
         if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, []);
         masterBEStartDateMap.get(storeCode).push(startDate);
       }
     }
-    if(status === 'ลาออก'){
+    if(status.includes('ลาออก')){
       const resignDate = parseFlexibleDate(r[9], false);
       if(resignDate && (!masterBEResignDateMap.has(storeCode) || resignDate > masterBEResignDateMap.get(storeCode))){
         masterBEResignDateMap.set(storeCode, resignDate);
