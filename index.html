@@ -3,1107 +3,1541 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SBB Manpower &amp; Daily Recruitment</title>
+<title>รายงานร้านค้า &amp; การลาออก BE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <style>
-:root{
-  --navy:#11192e; --navy-2:#1a2440;
-  --cream:#f6f3ec; --cream-2:#ece7da;
-  --ink:#1c2030; --paper:#ffffff; --line:#e3ddcd;
-  --gold:#c98a2c; --gold-soft:#f0d9ad;
-  --red:#b8473a; --red-soft:#f6dcd6;
-  --amber:#d39a2d; --amber-soft:#f7e8c8;
-  --green:#3f7a52; --green-soft:#dcebdf;
-  --sky:#3d7ea6; --sky-soft:#dceaf1;
-  --slate:#5c5c9e; --slate-soft:#e3e1f0;
-  --muted:#7c7768;
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{background:var(--cream); color:var(--ink); font-family:'IBM Plex Sans Thai', sans-serif; font-size:14px; line-height:1.5;}
-.num{font-family:'Space Grotesk','IBM Plex Sans Thai',sans-serif;}
+  :root{
+    --bg: #EEF2F1;
+    --panel: #FFFFFF;
+    --ink: #17262A;
+    --ink-soft: #57696D;
+    --line: #DCE4E2;
+    --teal: #0E6E5B;
+    --teal-dark: #0A5245;
+    --amber: #C9790C;
+    --amber-soft: #FBEBD5;
+    --red: #B5432C;
+    --red-soft: #FBE6E1;
+    --green-soft: #E1F1EA;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Thai',sans-serif;padding:28px 20px 60px;}
+  .wrap{max-width:1180px;margin:0 auto;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;margin-bottom:16px;}
+  h1{font-family:'Bai Jamjuree',sans-serif;font-size:27px;font-weight:700;margin:0 0 4px;letter-spacing:.1px;}
+  .subtitle{color:var(--ink-soft);font-size:14.5px;margin:0;}
+  .status-box{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9AA6A4;}
+  .dot.live{background:var(--teal);box-shadow:0 0 0 3px rgba(14,110,91,.15);}
+  .dot.err{background:var(--red);}
+  button.refresh{border:1px solid var(--line);background:var(--panel);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;transition:.15s;}
+  button.refresh:hover{border-color:var(--teal);color:var(--teal);}
+  button.refresh:disabled{opacity:.5;cursor:default;}
 
-/* ===== Top bar with tabs ===== */
-.topbar{background:linear-gradient(165deg, var(--navy) 0%, var(--navy-2) 100%); color:#f3efe3; padding:20px 28px 0; position:relative; overflow:hidden;}
-.topbar::before{content:""; position:absolute; top:-60px; right:-60px; width:280px; height:280px; background:radial-gradient(circle, rgba(201,138,44,0.18), transparent 70%);}
-.topbar-inner{position:relative; z-index:1;}
-.eyebrow{text-transform:uppercase; letter-spacing:.12em; font-size:11px; font-weight:600; color:var(--gold-soft); margin:0 0 4px;}
-.topbar h1{font-family:'Space Grotesk', sans-serif; font-size:clamp(19px,3vw,27px); margin:0 0 14px; font-weight:600; letter-spacing:-.01em;}
-.tabs{display:flex; gap:4px; flex-wrap:wrap;}
-.tab-btn{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#c7c2b1; padding:10px 20px; border-radius:8px 8px 0 0; font-size:13.5px; font-weight:600; cursor:pointer; font-family:inherit;}
-.tab-btn.active{background:var(--cream); color:var(--ink); border-bottom:none;}
-.refresh-btn{background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#c7c2b1; padding:10px 16px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; margin-left:auto;}
-.refresh-btn:hover{background:rgba(255,255,255,0.12); color:#f3efe3;}
-.refresh-btn:disabled{opacity:.5; cursor:default;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+  .tab-btn{border:none;background:none;font-family:inherit;font-size:14.5px;font-weight:600;color:var(--ink-soft);padding:10px 4px;cursor:pointer;border-bottom:2.5px solid transparent;margin-right:18px;}
+  .tab-btn.active{color:var(--teal-dark);border-bottom-color:var(--teal);}
+  .page{display:none;}
+  .page.active{display:block;}
 
-.page{display:none;}
-.page.active{display:block;}
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;}
+  @media (max-width:920px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 14px;}
+  .kpi .num{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--teal-dark);}
+  .kpi.warn .num{color:var(--red);}
+  .kpi .label{font-size:12.5px;color:var(--ink-soft);margin-top:4px;line-height:1.4;}
 
-/* ===== KPI / funnel shared ===== */
-.kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; padding:20px 28px; background:var(--navy-2);}
-.kpi-row.kpi-row-6{grid-template-columns:repeat(6,1fr);}
-.kpi{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09); border-radius:10px; padding:12px 16px;}
-.kpi .v{font-size:24px; font-weight:600; font-family:'Space Grotesk',sans-serif; color:#f3efe3;}
-.kpi .l{font-size:11px; color:#a8a395; margin-top:2px;}
-.kpi .v.warn{color:#e8b659;} .kpi .v.bad{color:#e08070;} .kpi .v.good{color:#7fc99a;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:22px;}
+  .panel h2{font-family:'Bai Jamjuree',sans-serif;font-size:17.5px;margin:0 0 3px;font-weight:700;}
+  .panel .desc{font-size:13px;color:var(--ink-soft);margin:0 0 16px;line-height:1.6;}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+  .controls input[type=text]{flex:1;min-width:180px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13.5px;background:#FBFCFC;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg button{border:none;background:var(--panel);color:var(--ink-soft);font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;cursor:pointer;}
+  .seg button.active{background:var(--teal);color:#fff;}
+  select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13.5px;background:#FBFCFC;color:var(--ink);}
 
-.funnel-strip{background:var(--paper); border-bottom:1px solid var(--line); padding:12px 28px; display:flex; flex-wrap:wrap;}
-.funnel-item{flex:1; min-width:150px; padding:4px 22px; border-right:1px solid var(--line); display:flex; flex-direction:column; gap:2px;}
-.funnel-item:last-child{border-right:none;}
-.funnel-item .fv{font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700;}
-.funnel-item .fl{font-size:11px; color:var(--muted);}
-.fv.sky{color:var(--sky);} .fv.slate{color:var(--slate);} .fv.red{color:var(--red);} .fv.ink{color:var(--ink);} .fv.green{color:var(--green);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{text-align:left;font-size:12px;color:var(--ink-soft);font-weight:600;border-bottom:1px solid var(--line);padding:8px 10px;white-space:nowrap;}
+  thead th[data-sort]{cursor:pointer;user-select:none;}
+  thead th[data-sort]:hover{color:var(--teal-dark);}
+  thead th[data-sort].sort-active{color:var(--teal-dark);}
+  thead th[data-sort]::after{content:'';margin-left:4px;opacity:.35;}
+  thead th[data-sort].sort-asc::after{content:'▲';opacity:1;}
+  thead th[data-sort].sort-desc::after{content:'▼';opacity:1;}
+  tbody td{padding:9px 10px;border-bottom:1px solid #EEF1F0;vertical-align:top;}
+  tbody tr:hover{background:#F7FAF9;}
+  .badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:12px;font-weight:600;}
+  .badge.yes{background:var(--green-soft);color:var(--teal-dark);}
+  .badge.no{background:var(--red-soft);color:var(--red);}
+  .badge.status{background:var(--amber-soft);color:var(--amber);}
+  .tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+  .tablewrap thead th{position:sticky;top:0;background:var(--panel);z-index:1;}
 
-.controls{background:var(--paper); border-bottom:1px solid var(--line); padding:12px 28px; display:flex; gap:14px; align-items:center; flex-wrap:wrap; position:sticky; top:0; z-index:40;}
-.field{display:flex; align-items:center; gap:8px;}
-.field label{font-size:12px; color:var(--muted); font-weight:500; white-space:nowrap;}
-.target-input{width:54px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px; text-align:center; background:var(--cream-2);}
-.search-box{flex:1; min-width:170px; max-width:260px; padding:7px 12px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:13px; background:var(--cream);}
-.search-box:focus, select:focus{outline:2px solid var(--gold); outline-offset:1px;}
-.chip-group{display:flex; gap:6px; flex-wrap:wrap;}
-.chip{padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:var(--paper); font-size:12px; cursor:pointer; color:var(--ink); font-weight:500;}
-.chip.active{background:var(--navy); color:#f3efe3; border-color:var(--navy);}
-.toggle-short{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); cursor:pointer; font-weight:500;}
-.toggle-short input{accent-color:var(--red);}
-.short-filter-group{display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap;}
-.apply-btn, .reset-btn{padding:6px 11px; border-radius:7px; border:1px solid var(--line); background:var(--paper); font-size:12px; cursor:pointer; color:var(--ink); font-weight:500;}
-.apply-btn:hover, .reset-btn:hover{background:var(--cream-2);}
-.save-flash{font-size:11px; color:var(--green); opacity:0; transition:opacity .3s;}
-.save-flash.show{opacity:1;}
-select.fselect{padding:7px 10px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:12.5px; background:var(--paper); color:var(--ink);}
-.date-input{padding:6px 9px; border:1px solid var(--line); border-radius:7px; font-family:inherit; font-size:12.5px; background:var(--paper); color:var(--ink);}
-.date-sep{font-size:12px; color:var(--muted);}
+  .loading, .errbox{text-align:center;padding:50px 20px;color:var(--ink-soft);font-size:14px;}
+  .errbox{color:var(--red);white-space:pre-line;}
+  .chart-box{height:240px;margin-bottom:6px;}
+  .foot-note{font-size:12px;color:var(--ink-soft);line-height:1.7;border-top:1px dashed var(--line);padding-top:14px;margin-top:6px;}
+  .count-pill{font-size:12px;color:var(--ink-soft);margin-left:6px;}
 
-main{padding:20px 28px 10px; max-width:1500px; margin:0 auto;}
-
-/* ===== Page 1 table ===== */
-.region-block{margin-bottom:20px;}
-.region-head{display:flex; align-items:baseline; gap:14px; padding:10px 4px; border-bottom:2px solid var(--ink); cursor:pointer; flex-wrap:wrap;}
-.region-head h2{font-family:'Space Grotesk',sans-serif; font-size:17px; margin:0; font-weight:600;}
-.region-stats{font-size:12px; color:var(--muted); display:flex; gap:12px; margin-left:auto; align-items:baseline; flex-wrap:wrap;}
-.region-stats b{color:var(--ink); font-family:'Space Grotesk',sans-serif;}
-.region-fillbar{width:80px; height:6px; border-radius:3px; background:var(--line); overflow:hidden;}
-.region-fillbar > div{height:100%;}
-.caret{font-size:12px; color:var(--muted); transition:transform .15s;}
-.region-block.collapsed .caret{transform:rotate(-90deg);}
-.region-body{padding-top:10px;}
-.region-block.collapsed .region-body{display:none;}
-
-.table-scroll{overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--paper);}
-table.roster{border-collapse:collapse; width:100%; min-width:1460px;}
-table.roster th, table.roster td{border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:7px 9px; font-size:12.5px;}
-table.roster th{font-weight:600; text-align:center; vertical-align:middle; white-space:nowrap;}
-table.roster td{text-align:center; vertical-align:middle;}
-table.roster tbody tr:hover{background:#fbf9f3;}
-table.roster tr.row-hide{display:none;}
-
-.grp-current th{background:var(--navy); color:#f3efe3;}
-.grp-pending th{background:var(--sky-soft); color:var(--sky);}
-.grp-training th{background:var(--slate-soft); color:var(--slate);}
-.sub-current th{background:#e7e3d6; color:var(--ink); font-size:11px;}
-.sub-pending th{background:#eef5f9; color:var(--sky); font-size:11px;}
-.sub-training th{background:#eeedf7; color:var(--slate); font-size:11px;}
-
-.col-team{position:sticky; left:0; z-index:5; background:var(--paper); min-width:170px; text-align:left !important;}
-.col-head{position:sticky; left:170px; z-index:5; background:var(--paper); min-width:150px; text-align:left !important;}
-thead .col-team, thead .col-head{background:var(--cream-2); z-index:6;}
-tbody tr:hover .col-team, tbody tr:hover .col-head{background:#fbf9f3;}
-
-.team-name{font-weight:600;}
-.head-name{color:var(--muted); font-size:11.5px;}
-.tot-current{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:3px 8px; border-radius:6px; display:inline-block;}
-.tot-pending{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--sky);}
-.tot-training{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--slate);}
-.tot-grand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; padding:3px 8px; border-radius:6px; display:inline-block;}
-.zero{color:#c2bca8;}
-.sub-val{font-family:'Space Grotesk',sans-serif;}
-.status-red{background:var(--red-soft); color:var(--red);}
-.status-amber{background:var(--amber-soft); color:#9c6f1f;}
-.status-green{background:var(--green-soft); color:var(--green);}
-.target-cell{width:50px; padding:4px 5px; border:1px solid var(--line); border-radius:5px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; text-align:center; background:var(--paper);}
-.target-cell:focus{outline:2px solid var(--gold); outline-offset:1px; background:#fffbf0;}
-.zone-divider td{border-top:2px solid var(--ink);}
-
-.legend{display:flex; gap:14px; flex-wrap:wrap; margin:16px 4px 8px; font-size:11px; color:var(--muted); max-width:1500px; margin-left:auto; margin-right:auto; padding:0 28px;}
-.legend span{display:flex; align-items:center; gap:5px;}
-.legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
-.empty-msg{padding:30px; text-align:center; color:var(--muted); font-size:13px;}
-
-/* ===== Page 3: Report ===== */
-.report-block{max-width:1000px; margin:0 auto 28px; padding:0 28px;}
-.report-h2{font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:600; margin:0 0 4px;}
-.report-sub{font-size:11.5px; color:var(--muted); margin:0 0 10px;}
-table.report-table{border-collapse:collapse; width:100%; background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
-table.report-table th{background:var(--cream-2); font-weight:600; text-align:left; padding:8px 14px; font-size:12px; border-bottom:1px solid var(--line);}
-table.report-table td{padding:8px 14px; font-size:12.5px; border-bottom:1px solid var(--line);}
-table.report-table tbody tr:last-child td{border-bottom:none;}
-table.report-table tbody tr:hover{background:#fbf9f3;}
-table.report-table td.num-cell, table.report-table th.num-cell{text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700;}
-table.report-table tr.sev-red td.num-cell{color:var(--red);}
-table.report-table tr.sev-amber td.num-cell{color:#9c6f1f;}
-.r4-date-field{margin-bottom:0; flex-wrap:wrap;}
-.exec-summary-head{padding:18px 28px 0; max-width:1100px; margin:0 auto;}
-
-/* ===== Compact executive summary — light theme, fits one screenshot ===== */
-.exec-capture{max-width:1000px; margin:18px auto 0; border:1px solid var(--line); border-radius:14px; background:var(--paper); overflow:hidden;}
-.exec-capture .exec-summary-head{padding:14px 20px 8px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--line);}
-.exec-capture .exec-summary-head .report-h2{margin:0; white-space:nowrap; font-size:15px;}
-.exec-capture .r4-date-field{margin:0 0 8px; gap:6px;}
-.exec-capture .r4-date-field label{font-size:11px; white-space:nowrap; color:var(--muted);}
-.exec-capture .date-input{padding:4px 7px; font-size:11.5px;}
-.exec-capture .reset-btn{padding:4px 9px; font-size:11px;}
-.exec-capture .card-section-label{padding:10px 20px 6px; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.02em; background:transparent; text-align:center;}
-.exec-capture .card-section-label .csl-note{font-weight:500; color:#9b9686;}
-.exec-capture .kpi-row{display:flex; flex-wrap:wrap; justify-content:center; gap:12px; padding:4px 20px 18px; background:transparent;}
-.exec-capture .kpi{flex:1 1 150px; max-width:190px; padding:12px 14px; border-radius:10px; background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--card-accent, var(--line)); box-shadow:0 1px 3px rgba(0,0,0,0.04);}
-.exec-capture .kpi .v{color:var(--card-accent, var(--ink)); font-size:20px; line-height:1.1;}
-.exec-capture .kpi .v.bad{color:var(--card-accent, var(--red));}
-.exec-capture .kpi .v.warn{color:var(--card-accent, #9c6f1f);}
-.exec-capture .kpi .v.good{color:var(--card-accent, var(--green));}
-.exec-capture .kpi .l{font-size:10.5px; line-height:1.3; margin-top:3px; color:var(--muted);}
-/* card accent colors, cycling like the reference design */
-#r_summaryRow .kpi:nth-child(1){--card-accent:#c84141;}
-#r_summaryRow .kpi:nth-child(2){--card-accent:#d39a2d;}
-#r_summaryRow .kpi:nth-child(3){--card-accent:#7c5cbf;}
-#r_positionRow .kpi:nth-child(1){--card-accent:#3d7ea6;}
-#r_positionRow .kpi:nth-child(2){--card-accent:#3f8a5f;}
-#r_positionRow .kpi:nth-child(3){--card-accent:#d3762d;}
-#r_positionRow .kpi:nth-child(4){--card-accent:#c98a2c;}
-.exec-capture .kpi .kpi-pct{font-size:9.5px; color:#9b9686;}
-.exec-capture .kpi.kpi-total-card{background:var(--gold-soft);}
-.exec-capture .kpi.kpi-total-card .v{color:#9c6f1f;}
-
-.newzone-section{max-width:1500px; margin:26px auto 10px; padding:0 28px;}
-.newzone-toggle{display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px 16px; background:var(--slate-soft); border-radius:10px; border:1px solid #cfcbe6;}
-.newzone-toggle h3{margin:0; font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--slate); font-weight:600;}
-.newzone-toggle p{margin:2px 0 0; font-size:11.5px; color:#5c5c9e; opacity:.85;}
-.newzone-body{display:none; margin-top:10px;}
-.newzone-section.open .newzone-body{display:block;}
-.newzone-section.open .caret-nz{transform:rotate(90deg);}
-.caret-nz{margin-left:auto; transition:transform .15s; color:var(--slate);}
-.nz-region{margin-bottom:14px;}
-.nz-region h4{font-size:12.5px; margin:0 0 6px; color:var(--muted); font-weight:600;}
-.nz-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px;}
-.nz-card{background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:9px 12px;}
-.nz-card .nzname{font-weight:600; font-size:12.5px;}
-.nz-card .nzcount{font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--slate); font-size:14px;}
-.nz-card .nzbreak{font-size:10.5px; color:var(--muted); margin-top:3px;}
-
-footer{padding:20px 28px 40px; max-width:1500px; margin:0 auto; font-size:11.5px; color:var(--muted); border-top:1px solid var(--line);}
-footer p{margin:4px 0;}
-
-/* ===== Page 2: Daily ===== */
-.summary-wrap{padding:16px 28px 4px; max-width:1500px; margin:0 auto;}
-.summary-title{font-size:12px; color:var(--muted); margin-bottom:8px; font-weight:600;}
-.summary-hint{font-size:11px; color:var(--muted); margin-bottom:10px; opacity:.85;}
-table.owner-summary{border-collapse:collapse; width:100%; max-width:640px; background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
-table.owner-summary th, table.owner-summary td{border:1px solid var(--line); padding:7px 14px; font-size:12.5px; text-align:center;}
-table.owner-summary th{background:var(--cream-2); font-weight:600;}
-table.owner-summary td:first-child, table.owner-summary th:first-child{text-align:left;}
-table.owner-summary tbody tr:hover{background:#fbf9f3;}
-table.owner-summary .sum-cell{font-family:'Space Grotesk',sans-serif; font-weight:700;}
-table.owner-summary .grand-row td{font-weight:700; background:var(--cream-2);}
-table.owner-summary .grand-row td:first-child{text-align:center;}
-table.owner-summary .pos-th, table.owner-summary .own-td, table.owner-summary .own-th{cursor:pointer; user-select:none;}
-table.owner-summary .pos-th:hover, table.owner-summary .own-td:hover, table.owner-summary .own-th:hover{background:var(--gold-soft);}
-table.owner-summary .pos-th.th-active{background:var(--navy); color:#f3efe3;}
-table.owner-summary .own-td.own-active{background:var(--navy); color:#f3efe3; font-weight:600;}
-
-.day-block{background:var(--paper); border:1px solid var(--line); border-radius:10px; margin-bottom:12px; overflow:hidden;}
-.day-block.row-hide{display:none;}
-.day-block.date-hide{display:none;}
-.day-head{display:flex; align-items:center; gap:14px; padding:11px 16px; cursor:pointer; background:var(--cream-2); flex-wrap:wrap;}
-.day-head .dlabel{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px;}
-.day-head .dsub{font-size:11.5px; color:var(--muted);}
-.day-badges{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap;}
-.day-badge{font-size:11px; padding:3px 9px; border-radius:999px; background:var(--paper); border:1px solid var(--line); font-weight:500;}
-.day-badge b{font-family:'Space Grotesk',sans-serif;}
-.day-caret{font-size:12px; color:var(--muted); transition:transform .15s;}
-.day-block.collapsed .day-caret{transform:rotate(-90deg);}
-.day-body{display:block;}
-.day-block.collapsed .day-body{display:none;}
-
-table.daily{border-collapse:collapse; width:100%;}
-table.daily th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:600; padding:7px 12px; border-bottom:1px solid var(--line); background:var(--paper);}
-table.daily td{padding:7px 12px; border-bottom:1px solid var(--line); font-size:12.5px;}
-table.daily tr:last-child td{border-bottom:none;}
-table.daily tr:hover{background:#fbf9f3;}
-.pill{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:600; white-space:nowrap;}
-.pill-come{background:var(--green-soft); color:var(--green);}
-.pill-training{background:#dceaf6; color:#3d6ea6;}
-.pill-noshow{background:var(--red-soft); color:var(--red);}
-.pill-pending{background:var(--sky-soft); color:var(--sky);}
-.pill-placed{background:#dceaf1; color:#2d6a8e;}
-.pill-dropped{background:var(--amber-soft); color:#9c6f1f;}
-.owner-tag{font-size:11px; color:var(--muted); font-weight:500;}
-
-@media (max-width:900px){
-  .kpi-row{grid-template-columns:repeat(2,1fr); padding:16px;}
-  .kpi-row.kpi-row-6{grid-template-columns:repeat(2,1fr);}
-  .controls{padding:12px 16px;}
-  main{padding:16px 10px 0;}
-  .topbar{padding:16px 16px 0;}
-  .funnel-strip{padding:10px 14px;}
-  .funnel-item{min-width:45%; border-right:none; border-bottom:1px solid var(--line); padding:6px;}
-  .summary-wrap{padding:12px 14px 4px;}
-  table.daily{font-size:11.5px;}
-}
-
-/* ===== Loading / error states ===== */
-#loadingScreen{position:fixed; inset:0; background:var(--cream); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:14px;}
-.spinner{width:36px; height:36px; border:3px solid var(--line); border-top-color:var(--navy); border-radius:50%; animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-#loadingScreen p{color:var(--muted); font-size:13px;}
-#errorScreen{position:fixed; inset:0; background:var(--cream); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; gap:14px; padding:24px; text-align:center;}
-#errorScreen.show{display:flex;}
-#errorScreen .err-icon{font-size:32px;}
-#errorScreen h2{font-family:'Space Grotesk',sans-serif; font-size:18px; margin:0; color:var(--red);}
-#errorScreen p{color:var(--muted); font-size:13px; max-width:480px; line-height:1.6;}
-#errorScreen button{padding:9px 20px; border-radius:8px; border:none; background:var(--navy); color:#f3efe3; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;}
-#errorScreen button:hover{background:var(--navy-2);}
-#appRoot{display:none;}
-#appRoot.show{display:block;}
-.live-badge{display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:#9b9686; margin-left:10px; font-weight:500;}
-.live-dot{width:6px; height:6px; border-radius:50%; background:#7fc99a; display:inline-block;}
+  .breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px;}
+  @media (max-width:900px){.breakdown-grid{grid-template-columns:1fr;}}
+  .barlist{display:flex;flex-direction:column;gap:8px;}
+  .barrow{display:grid;grid-template-columns:200px 1fr 34px;gap:8px;align-items:start;font-size:13px;padding:2px 0;}
+  .barrow .lbl{color:var(--ink);white-space:normal;word-break:break-word;line-height:1.35;padding-top:1px;}
+  .barrow .track{background:#EEF1F0;border-radius:5px;height:16px;overflow:hidden;margin-top:2px;}
+  .barrow .fill{background:var(--teal);height:100%;border-radius:5px;}
+  .barrow.amber .fill{background:var(--amber);}
+  .barrow .val{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);padding-top:1px;}
+  .barrow.clickable{cursor:pointer;border-radius:6px;transition:.12s;}
+  .barrow.clickable:hover{background:#F3F7F6;}
+  .barrow.clickable.selected .lbl{color:var(--teal-dark);font-weight:600;}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<div id="loadingScreen">
-  <div class="spinner"></div>
-  <p>กำลังโหลดข้อมูลจาก Google Sheets...</p>
-</div>
+  <div class="topbar">
+    <div>
+      <h1>รายงานร้านค้า &amp; การลาออก BE</h1>
+      <p class="subtitle">ดึงข้อมูลสดจาก Google Sheets ทุกครั้งที่เปิดหน้านี้ — ไม่ต้องอัปโหลดไฟล์</p>
+    </div>
+    <div class="status-box">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">กำลังเชื่อมต่อ...</span>
+      <button class="refresh" id="refreshBtn">↻ รีเฟรชข้อมูล</button>
+    </div>
+  </div>
 
-<div id="errorScreen">
-  <div class="err-icon">⚠️</div>
-  <h2>โหลดข้อมูลไม่สำเร็จ</h2>
-  <p id="errorMessage">เกิดข้อผิดพลาดบางอย่าง</p>
-  <button id="retryBtn">ลองใหม่อีกครั้ง</button>
-</div>
+  <div id="loadingBox" class="loading">กำลังโหลดข้อมูลจาก Google Sheets…</div>
+  <div id="errorBox" class="errbox" style="display:none;"></div>
 
-<div id="appRoot">
+  <div id="content" style="display:none;">
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <p class="eyebrow">SBB Field Force <span class="live-badge"><span class="live-dot"></span>เชื่อมต่อ Google Sheets สด <span id="lastUpdated"></span></span></p>
-    <h1>กำลังพลภาคสนาม &amp; สรรหารายวัน</h1>
     <div class="tabs">
-      <button class="tab-btn active" data-page="manpower">กำลังพล</button>
-      <button class="tab-btn" data-page="daily">Daily สรรหา</button>
-      <button class="tab-btn" data-page="report">รีพอท</button>
-      <button class="refresh-btn" id="refreshBtn" title="โหลดข้อมูลใหม่จาก Google Sheets">⟳ รีเฟรชข้อมูล</button>
+      <button class="tab-btn active" data-page="page1">1. ร้านค้าทั้งหมด</button>
+      <button class="tab-btn" data-page="page2">2. การลาออก (2026)</button>
     </div>
+
+    <!-- ================= PAGE 1 ================= -->
+    <div class="page active" id="page1">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="num" id="kpiAllStores">–</div>
+          <div class="label">ร้านค้าทั้งหมดในระบบ (ทุกสถานะ)</div>
+        </div>
+        <div class="kpi warn">
+          <div class="num" id="kpiRecruitStores">–</div>
+          <div class="label">ร้านที่ต้องสรรหา (สถานะ "สรรหา")</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiHadBE">–</div>
+          <div class="label">ในนั้น เคยมี BE ทำงานมาก่อน</div>
+        </div>
+        <div class="kpi warn">
+          <div class="num" id="kpiNeverBE">–</div>
+          <div class="label">ในนั้น ไม่เคยมี BE ทำงานเลย</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>ประเภทเบียร์ — จำนวนร้าน</h2>
+        <p class="desc">จัดกลุ่มจากคอลัมน์ประเภทเบียร์ในชีต "ร้านที่ต้องสรรหา": มีคำว่า "เบียร์สด" = เบียร์สด นอกนั้นถือเป็นเบียร์ขวด — คลิกที่วงกลมเพื่อดูเฉพาะประเภทนั้น (คลิกซ้ำเพื่อยกเลิก) จะกรองตารางด้านล่างให้ด้วย</p>
+        <div class="chart-box" style="height:220px;"><canvas id="beerTypeChart"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h2>BE ที่ต้องสรรหา — แยกตามจำนวนวันว่าง</h2>
+        <p class="desc">นับเฉพาะร้านสถานะ "สรรหา" จัดกลุ่มตามระยะเวลาที่ว่างแล้วแยกสีตามว่าร้านนั้นเคยมี BE ทำงานมาก่อนหรือไม่ — ยิ่งแท่งขวาสุดสูง ยิ่งมีร้านที่ว่างนานผิดปกติเยอะ</p>
+        <div class="chart-box" style="height:260px;"><canvas id="vacancyChart"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h2>ร้านที่ต้องสรรหา — เคยมี BE ทำงานอยู่หรือไม่</h2>
+        <p class="desc">จับคู่รหัสร้านจากชีต "ร้านที่ต้องสรรหา" กับประวัติเช็คอินทั้งหมดในชีต "BE" — ถ้ารหัสร้านเคยปรากฏใน log เช็คอิน แปลว่าเคยมี BE ประจำร้านนี้มาก่อน (ถ้าร้านไหนมี 2 แถว หมายถึงร้านนั้นต้องการ BE 2 คน)</p>
+        <div class="controls">
+          <div class="seg" id="statusFilterSeg">
+            <button data-val="สรรหา" class="active">เฉพาะสถานะ "สรรหา"</button>
+            <button data-val="ALL">ทุกสถานะ</button>
+          </div>
+          <div class="seg" id="hadBEFilterSeg">
+            <button data-val="ALL" class="active">ทั้งหมด</button>
+            <button data-val="YES">เคยมี BE</button>
+            <button data-val="NO">ไม่เคยมี BE</button>
+          </div>
+        </div>
+        <div class="controls">
+          <select id="report1ZoneFilter"><option value="ALL">ทุกโซน</option></select>
+          <select id="report1AreaFilter"><option value="ALL">ทุกพื้นที่</option></select>
+          <select id="report1BeerTypeFilter"><option value="ALL">ทุกประเภทเบียร์</option></select>
+          <select id="report1StoreTypeFilter"><option value="ALL">ทุกประเภทร้าน</option></select>
+          <select id="recruitGroupFilter"><option value="ALL">ทุกระยะเวลาที่ว่าง</option></select>
+          <input type="text" id="searchStore" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
+          <span class="count-pill" id="report1Count"></span>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr id="report1HeadRow">
+              <th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="beerType">ประเภทเบียร์</th><th data-sort="storeType">ประเภทร้าน</th><th data-sort="jobStatus">สถานะทำงาน</th><th data-sort="recruitGroup">ระยะเวลาที่ว่าง</th><th data-sort="hadBE">เคยมี BE?</th>
+            </tr></thead>
+            <tbody id="report1Body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE 2 ================= -->
+    <div class="page" id="page2">
+      <div class="controls" style="margin-bottom:16px;">
+        <div class="seg" id="scopeFilterSeg">
+          <button data-val="IN300" class="active">ร้านปัจจุบัน (ในรายชื่อ 300 ร้าน)</button>
+          <button data-val="OUT300">ร้านนอกเหนือรายชื่อ</button>
+        </div>
+        <span class="count-pill" id="scopeCountPill"></span>
+        <button class="refresh" id="clearAreaBtn" style="display:none;">✕ ล้างตัวกรองพื้นที่</button>
+        <button class="refresh" id="clearTypeBtn" style="display:none;">✕ ล้างตัวกรองประเภทร้าน</button>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi warn">
+          <div class="num" id="kpiResigned2026">–</div>
+          <div class="label">ลาออกในปี 2026 ทั้งหมด</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiAvgTenure">–</div>
+          <div class="label">อายุงานเฉลี่ยของผู้ลาออก (วัน)</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiTopArea">–</div>
+          <div class="label">พื้นที่ที่ลาออกมากที่สุด</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiTopType">–</div>
+          <div class="label">ประเภทร้านที่ลาออกมากที่สุด</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>การลาออกแยกโซน ตามเดือน + อัตราลาออกต่อร้าน</h2>
+        <p class="desc">จำนวนคนลาออกต่อโซนต่อเดือน (2026) เทียบกับจำนวนร้านทั้งหมดในโซนนั้น — % turnover = จำนวนคนลาออกทั้งปี ÷ จำนวนร้านทั้งหมด — คลิกที่ชื่อโซนเพื่อดูพื้นที่ย่อยในโซนนั้น และกรองข้อมูลด้านล่างทั้งหมด</p>
+        <div class="tablewrap" style="max-height:420px;">
+          <table>
+            <thead><tr id="zoneMonthHeadRow"><th>โซน</th></tr></thead>
+            <tbody id="zoneMonthBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="areaMonthPanel" style="display:none;">
+        <h2 id="areaMonthTitle">การลาออกแยกพื้นที่ ตามเดือน + อัตราลาออกต่อร้าน</h2>
+        <p class="desc">แสดงเมื่อเลือกโซนแล้วเท่านั้น — แยกละเอียดระดับพื้นที่ภายในโซนที่เลือก คลิกชื่อพื้นที่เพื่อกรองข้อมูลทั้งหน้าต่อ <span id="rawAreaClearWrap" style="display:none;">— <button class="refresh" id="clearRawAreaBtn" style="padding:3px 10px;">✕ ล้างตัวกรองพื้นที่นี้</button></span></p>
+        <div class="tablewrap" style="max-height:420px;">
+          <table>
+            <thead><tr id="areaMonthHeadRow"><th>พื้นที่</th></tr></thead>
+            <tbody id="areaMonthBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="storeMonthPanel" style="display:none;">
+        <h2 id="storeMonthTitle">การลาออกแยกร้าน ตามเดือน</h2>
+        <p class="desc">แสดงเมื่อเลือกโซนแล้วเท่านั้น — เฉพาะร้านที่มีคนลาออกจริงในโซน (หรือพื้นที่ ถ้าเลือกไว้ด้วย) นี้เท่านั้น</p>
+        <div class="tablewrap" style="max-height:420px;">
+          <table>
+            <thead><tr id="storeMonthHeadRow"><th>ร้าน</th></tr></thead>
+            <tbody id="storeMonthBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>ประเภทร้านที่ลาออก</h2>
+        <p class="desc">ประเภทร้านมาจากชีต "BE ทั้งหมด" (คอลัมน์ประเภทร้าน) ของร้านล่าสุดที่ BE คนนั้นทำงานอยู่</p>
+        <div class="barlist" id="typeBreakdown"></div>
+      </div>
+
+      <div class="panel" id="areaDetailPanel" style="display:none;">
+        <h2 id="areaDetailTitle">ร้านทั้งหมดในพื้นที่</h2>
+        <p class="desc">รายชื่อร้านทั้งหมดในพื้นที่นี้ (จากชีต "ร้านที่ต้องสรรหา") — คลิกพื้นที่อื่นในกราฟด้านบนเพื่อดูพื้นที่อื่น หรือกด "ล้างตัวกรองพื้นที่" เพื่อปิด</p>
+        <div class="controls">
+          <select id="areaDetailStatusFilter"><option value="ALL">ทุกสถานะ</option></select>
+          <select id="areaDetailTypeFilter"><option value="ALL">ทุกประเภทร้าน</option></select>
+          <input type="text" id="areaDetailSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
+          <span class="count-pill" id="areaDetailCount"></span>
+        </div>
+        <div class="tablewrap" style="max-height:300px;">
+          <table>
+            <thead><tr><th>รหัสร้าน</th><th>ชื่อร้าน</th><th>โซน</th><th>พื้นที่</th><th>ประเภทเบียร์</th><th>ประเภทร้าน</th><th>สถานะทำงาน</th><th>เคยมี BE?</th><th>จำนวนคนลาออก</th></tr></thead>
+            <tbody id="areaDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="typeDetailPanel" style="display:none;">
+        <h2 id="typeDetailTitle">ร้านที่ลาออกในประเภทที่เลือก</h2>
+        <p class="desc">รายชื่อร้าน ชื่อร้าน และพื้นที่ ที่มีคนลาออกในประเภทร้านนี้ — คลิกประเภทอื่นด้านบนเพื่อดูประเภทอื่น หรือกด "ล้างตัวกรองประเภทร้าน" เพื่อปิด</p>
+        <div class="controls">
+          <input type="text" id="typeDetailSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน / พื้นที่...">
+          <span class="count-pill" id="typeDetailCount"></span>
+        </div>
+        <div class="tablewrap" style="max-height:300px;">
+          <table>
+            <thead><tr><th>รหัสร้าน</th><th>ชื่อร้าน</th><th>พื้นที่</th><th>สถานะทำงาน</th><th>เคยมี BE?</th><th>จำนวนคนลาออก</th></tr></thead>
+            <tbody id="typeDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="combinedDetailPanel" style="display:none;">
+        <h2 id="combinedDetailTitle">ร้านตามประเภทและพื้นที่ที่เลือก</h2>
+        <p class="desc">เมื่อเลือกทั้งพื้นที่และประเภทร้านพร้อมกัน จะแสดงเฉพาะร้านที่ตรงทั้งสองเงื่อนไขในตารางเดียวนี้ — กด "ล้างตัวกรองพื้นที่" หรือ "ล้างตัวกรองประเภทร้าน" เพื่อกลับไปดูแยกกัน</p>
+        <div class="controls">
+          <select id="combinedRawAreaFilter"><option value="ALL">ทุกพื้นที่</option></select>
+          <select id="combinedStatusFilter"><option value="ALL">ทุกสถานะ</option></select>
+          <select id="combinedHadBEFilter">
+            <option value="ALL">เคยมี BE: ทั้งหมด</option>
+            <option value="YES">เคยมี BE</option>
+            <option value="NO">ไม่เคยมี BE</option>
+          </select>
+          <select id="combinedBeerTypeFilter"><option value="ALL">ทุกประเภทเบียร์</option></select>
+          <input type="text" id="combinedDetailSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
+          <span class="count-pill" id="combinedDetailCount"></span>
+        </div>
+        <div class="tablewrap" style="max-height:300px;">
+          <table>
+            <thead><tr id="combinedDetailHeadRow">
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="beerType">ประเภทเบียร์</th><th data-sort="jobStatus">สถานะทำงาน</th><th data-sort="hadBE">เคยมี BE?</th><th data-sort="resignCount">จำนวนคนลาออก</th>
+            </tr></thead>
+            <tbody id="combinedDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>3. อายุงาน ณ วันที่ลาออก</h2>
+        <p class="desc">คำนวณจากวันที่เช็คอินครั้งแรก ถึงวันทำงานล่าสุดของแต่ละคนในประวัติเช็คอิน — หมายเหตุ: ถ้าใครเริ่มงานก่อนช่วงที่ log เริ่มเก็บข้อมูล ตัวเลขนี้จะน้อยกว่าอายุงานจริง</p>
+        <div class="barlist" id="tenureBreakdown"></div>
+      </div>
+
+      <div class="panel">
+        <h2>รายชื่อผู้ลาออก</h2>
+        <div class="controls">
+          <select id="areaFilter"><option value="ALL">ทุกโซน</option></select>
+          <select id="rawAreaFilterR2"><option value="ALL">ทุกพื้นที่</option></select>
+          <select id="typeFilter"><option value="ALL">ทุกประเภทร้าน</option></select>
+          <select id="monthFilterR2"><option value="ALL">ทุกเดือน</option></select>
+          <select id="tenureFilterR2"><option value="ALL">ทุกช่วงอายุงาน</option></select>
+          <input type="text" id="searchEmp" placeholder="ค้นหาชื่อ / รหัสพนักงาน / ร้าน...">
+          <span class="count-pill" id="report2Count"></span>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr id="report2HeadRow">
+              <th data-sort="emp">EmpCODE</th><th data-sort="name">ชื่อ-สกุล</th><th data-sort="storeName">ร้านล่าสุด</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="beerType">ประเภทเบียร์</th><th data-sort="storeType">ประเภทร้าน</th><th data-sort="inStoreList">ขอบเขตร้านค้า</th><th data-sort="lastDate">วันทำงานล่าสุด</th><th data-sort="tenureDays">อายุงาน (วัน)</th>
+            </tr></thead>
+            <tbody id="report2Body"></tbody>
+          </table>
+        </div>
+        <p class="foot-note">
+          หมายเหตุวิธีคำนวณการลาออก: ชีต "BE ทั้งหมด" เป็น log เช็คอินรายวัน คอลัมน์ "สถานะ BE" แสดงสถานะล่าสุด ณ วันที่ดึงข้อมูล ซ้ำกันทุกแถวของคนคนเดียวกัน — dashboard นี้จึงใช้ "วันทำงานล่าสุด" เป็นตัวประมาณวันลาออก และ "วันเช็คอินแรกสุด" เป็นตัวประมาณวันเริ่มงาน
+        </p>
+      </div>
+    </div>
+
   </div>
+
+  <div class="foot-note" style="margin-top:4px;" id="syncFoot"></div>
 </div>
-
-<!-- ============ PAGE 1: MANPOWER ============ -->
-<section class="page active" id="page-manpower">
-  <div class="kpi-row">
-    <div class="kpi"><div class="v num" id="kpiTeams">–</div><div class="l">ทีมย่อยทั้งหมด</div></div>
-    <div class="kpi"><div class="v num" id="kpiCurrent">–</div><div class="l">กำลังพลปัจจุบัน (คน)</div></div>
-    <div class="kpi"><div class="v num" id="kpiRequired">–</div><div class="l">เป้าหมายรวม (คน)</div></div>
-    <div class="kpi"><div class="v num" id="kpiFill">–</div><div class="l">อัตราเติมเต็มเฉลี่ย (เฉพาะปัจจุบัน)</div></div>
-    <div class="kpi"><div class="v num bad" id="kpiBelowSix">–</div><div class="l">ทีมที่ ต่ำกว่า 6 คน</div></div>
-  </div>
-
-  <div class="funnel-strip">
-    <div class="funnel-item"><div class="fv sky num" id="fnPending">–</div><div class="fl">รอเข้ามารายงานตัว (คน)</div></div>
-    <div class="funnel-item"><div class="fv slate num" id="fnTraining">–</div><div class="fl">ฝึกงาน (รอบรรจุ) (คน)</div></div>
-    <div class="funnel-item"><div class="fv red num" id="fnNoShow">–</div><div class="fl">สมัครแล้วไม่มารายงานตัว (คน)</div></div>
-    <div class="funnel-item"><div class="fv ink num" id="fnGrand">–</div><div class="fl">รวมกำลังพลทั้งหมด [F+O+S]</div></div>
-  </div>
-
-  <div class="controls">
-    <button class="reset-btn" id="resetAllBtn">รีเซ็ตเป้าหมายเป็นค่าจากไฟล์</button>
-    <span class="save-flash" id="saveFlash">บันทึกแล้ว ✓</span>
-    <input type="text" id="searchBox" class="search-box" placeholder="ค้นหาทีมย่อย / หัวหน้าทีม...">
-    <div class="chip-group" id="regionChips"></div>
-    <div class="short-filter-group">
-      <label class="toggle-short"><input type="checkbox" id="shortOnly"> เฉพาะทีมที่ขาดกำลังพล</label>
-      <select class="fselect" id="shortOnlyBasis">
-        <option value="current">เทียบจากกำลังพลปัจจุบัน</option>
-        <option value="grand">เทียบจากรวม</option>
-      </select>
-    </div>
-  </div>
-
-  <main id="mainContent"></main>
-
-  <div class="legend">
-    <span><i style="background:#11192e"></i>กำลังพลปัจจุบัน</span>
-    <span><i style="background:#3d7ea6"></i>รอเข้ามารายงานตัว</span>
-    <span><i style="background:#5c5c9e"></i>ฝึกงาน (รอบรรจุ)</span>
-    <span><i style="background:#b8473a"></i>ต่ำกว่าเป้ามาก (ทั้งช่องปัจจุบันและช่องรวม)</span>
-    <span><i style="background:#d39a2d"></i>ต่ำกว่าเป้า</span>
-    <span><i style="background:#3f7a52"></i>ถึง/เกินเป้า</span>
-  </div>
-
-  <div class="newzone-section" id="newZoneSection" style="display:none;">
-    <div class="newzone-toggle" id="newZoneToggle">
-      <div>
-        <h3>ทีมใหม่ที่อยู่ระหว่างเปิด (จากข้อมูลสรรหา ยังไม่อยู่ใน "กำลังพลที่ต้องการ")</h3>
-        <p id="newZoneSummary"></p>
-      </div>
-      <span class="caret-nz">▸</span>
-    </div>
-    <div class="newzone-body" id="newZoneBody"></div>
-  </div>
-
-  <footer>
-    <p><b>รายชื่อทีมย่อยและภูมิภาค</b> ทั้งหมดมาจาก sheet "กำลังพลที่ต้องการ" โดยตรง (56 ทีม) — <b>กำลังพลปัจจุบัน</b> นับเฉพาะพนักงาน active จาก sheet "SBB" ตามตำแหน่งจริง: SBB คนเก่งพลัส_กิจกรรม, SBB คนเก่งพลัส_BE, ผู้ช่วยทีม, ม้าเร็ว, สาวบาวแดง — คอลัมน์ "รองหัวหน้าทีม + ทดแทนรองยศ" และ "หัวหน้าทีมเชียร์ + ทดแทน" เป็นตำแหน่งระดับโซน (ไม่ระบุทีมย่อยในไฟล์ต้นฉบับ) แสดงไว้ที่ทีมย่อยแรกของโซนนั้นเพื่อให้ตรงโครงสร้างตาราง</p>
-    <p><b>รอเข้ามารายงานตัว</b> และ <b>ฝึกงาน (รอบรรจุ)</b> นับจาก sheet "ฝึกงาน" ตามสถานะรายงานตัว/สถานะฝึกงาน เช่นเดิม — คนที่ "ผ่านฝึกงาน-บรรจุ" (<span id="ftPlaced">–</span> คน) ถือว่าบรรจุแล้วจึงไม่นับเป็นฝึกงาน ส่วนคนที่ "ไม่ผ่านฝึกงาน"/"ยกเลิกฝึกงาน" (<span id="ftDropped">–</span> คน) และ "ไม่มารายงานตัว" (<span id="ftNoshow">–</span> คน) ถูกตัดออกจากทุกยอด</p>
-    <p><b>กำลังพลที่ต้องการ</b> แก้ไขได้ทีละทีมในตาราง (ค่าเริ่มต้นมาจากไฟล์ ส่วนใหญ่ 8 คน บางทีม 10 คน) ระบบบันทึกการแก้ไขให้อัตโนมัติ ปุ่ม "รีเซ็ตเป้าหมายเป็นค่าจากไฟล์" ใช้ย้อนกลับค่าตามไฟล์ต้นฉบับ</p>
-    <p><b>ช่อง "รวม"</b> = กำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) และมีสีกำกับเช่นเดียวกับช่องกำลังพลปัจจุบัน หากรวมแล้วยังน้อยกว่ากำลังพลที่ต้องการของทีมนั้น จะขึ้นสีแดง/เหลืองให้สังเกตได้ทันทีว่าต่อให้คนที่รอ/ฝึกงานมาครบ ก็ยังไม่พอเป้า</p>
-    <p><b>การ์ด "ทีมที่ต่ำกว่า 6 คน"</b> นับทีมที่ผลรวมกำลังพลปัจจุบัน+รอเข้ารายงานตัว+ฝึกงาน น้อยกว่า 6 คน (เกณฑ์ตายตัวที่ 6 คน ไม่ขึ้นกับเป้าหมายที่ตั้งไว้ของแต่ละทีม) ใช้มอนิเตอร์ทีมที่กำลังพลรวมต่ำมากเป็นพิเศษ ตัวเลขนี้จะเปลี่ยนตามตัวกรองภูมิภาคที่เลือกไว้ด้านบนด้วย</p>
-  </footer>
-</section>
-
-<!-- ============ PAGE 2: DAILY ============ -->
-<section class="page" id="page-daily">
-  <div class="kpi-row kpi-row-6">
-    <div class="kpi"><div class="v num" id="d_kpiTotal">–</div><div class="l">ผู้สมัครทั้งหมด (คน)</div></div>
-    <div class="kpi"><div class="v num warn" id="d_kpiPending">–</div><div class="l">รอเข้ารายงานตัว (คน)</div></div>
-    <div class="kpi"><div class="v num" style="color:#7fa8d9" id="d_kpiTraining">–</div><div class="l">อยู่ระหว่างฝึกงาน (คน)</div></div>
-    <div class="kpi"><div class="v num good" id="d_kpiPlaced">–</div><div class="l">บรรจุแล้ว (คน)</div></div>
-    <div class="kpi"><div class="v num" style="color:#e8b659" id="d_kpiDropped">–</div><div class="l">ไม่ผ่าน/ยกเลิก (คน)</div></div>
-    <div class="kpi"><div class="v num bad" id="d_kpiNoshow">–</div><div class="l">ไม่มารายงานตัว (คน)</div></div>
-  </div>
-
-  <div class="controls">
-    <input type="text" id="d_searchBox" class="search-box" placeholder="ค้นหาชื่อ / พื้นที่...">
-    <div class="field"><label for="d_dateFrom">วันที่สรรหา</label><input type="date" id="d_dateFrom" class="date-input"><span class="date-sep">ถึง</span><input type="date" id="d_dateTo" class="date-input"><button class="reset-btn" id="d_dateResetBtn">ล้างวันที่</button></div>
-    <div class="chip-group" id="positionChips"></div>
-    <div class="chip-group" id="statusChips"></div>
-    <select class="fselect" id="ownerSelect"><option value="all">ผู้สรรหาทั้งหมด</option></select>
-  </div>
-
-  <div class="summary-wrap">
-    <div class="summary-title" id="summaryTitle">สรุปจำนวนผู้สมัครตามผู้สรรหา และตำแหน่ง</div>
-    <div class="summary-hint">กรองได้จากตัวเลือกด้านบน (วันที่ / ตำแหน่ง / สถานะ / ผู้สรรหา / คำค้นหา) หรือคลิกชื่อผู้สรรหา/หัวตำแหน่งในตารางด้านล่างเพื่อกรองโดยตรง (คลิกซ้ำเพื่อยกเลิก)</div>
-    <div id="ownerSummaryHolder"></div>
-  </div>
-
-  <main id="dailyContent"></main>
-
-  <footer>
-    <p>ข้อมูลทั้งหมดมาจาก sheet "ฝึกงาน" จัดกลุ่มตาม <b>วันที่สรรหา</b> เรียงจากวันล่าสุดไปวันแรกสุด (<span id="ftDateMin">–</span> ถึง <span id="ftDateMax">–</span>) แต่ละวันแสดงทุกคนที่ถูกสรรหาในวันนั้น พร้อมตำแหน่ง พื้นที่ สถานะ และผู้สรรหา (Owner)</p>
-    <p><b>คอลัมน์ "สถานะ"</b> รวมสถานะรายงานตัวกับสถานะฝึกงานเป็นขั้นเดียว: <b>รอเข้ารายงานตัว</b> = ยังไม่ถึงวันรายงานตัว, <b>อยู่ระหว่างฝึกงาน</b> = มารายงานตัวแล้วและยังไม่มีผลสรุป (สถานะฝึกงานเป็น "ระหว่างฝึกงาน"/"ต่อฝึกงาน" หรือยังไม่ระบุ — กล่าวคือ มารายงานตัว = อยู่ระหว่างฝึกงาน จนกว่าจะมีผลสรุป), <b>บรรจุแล้ว</b> = ผ่านฝึกงานและบรรจุแล้ว, <b>ไม่ผ่าน/ยกเลิก</b> = ไม่ผ่านฝึกงานหรือยกเลิกระหว่างฝึกงาน, <b>ไม่มารายงานตัว</b> = ไม่มาตามนัด</p>
-    <p><b>ตารางสรุปด้านบน</b> นับจำนวนคนที่แต่ละผู้สรรหา (Owner) หาได้ แยกตามตำแหน่ง พร้อมยอดรวมต่อคนและยอดรวมทั้งหมด — ตัวเลขในตารางนี้จะปรับตามตัวกรอง (วันที่/ตำแหน่ง/สถานะ/ผู้สรรหา/คำค้นหา) ที่เลือกไว้ด้านบนเสมอ</p>
-    <p><b>ตัวกรองวันที่สรรหา</b> เลือกช่วงวันที่ (จาก-ถึง) เพื่อดูเฉพาะข้อมูลในช่วงนั้น เช่น ดูเฉพาะสัปดาห์นี้หรือเดือนนี้ ปุ่ม "ล้างวันที่" ใช้ย้อนกลับไปดูข้อมูลทั้งหมด</p>
-  </footer>
-</section>
-
-<!-- ============ PAGE 3: REPORT ============ -->
-<section class="page" id="page-report">
-  <div id="execSummaryCapture" class="exec-capture">
-    <div class="exec-summary-head">
-      <h2 class="report-h2">สรุปภาพรวม</h2>
-      <div class="field r4-date-field">
-        <label for="r_dateFrom">วันที่สรรหา</label>
-        <input type="date" id="r_dateFrom" class="date-input">
-        <span class="date-sep">ถึง</span>
-        <input type="date" id="r_dateTo" class="date-input">
-        <button class="reset-btn" id="r_dateResetBtn">ล้างวันที่</button>
-      </div>
-    </div>
-
-    <div class="card-section-label">SBB <span class="csl-note">(เฉพาะทีมสถานะ Active)</span></div>
-    <div class="kpi-row" id="r_summaryRow">
-      <div class="kpi"><div class="v num bad" id="r_kpiBelow6">–</div><div class="l">ทีมที่ ต่ำกว่า 6 คน</div></div>
-      <div class="kpi"><div class="v num warn" id="r_kpiBelow8">–</div><div class="l">ทีมที่ต่ำกว่า 8 คน</div></div>
-      <div class="kpi"><div class="v num bad" id="r_kpiNoRider">–</div><div class="l">ทีมที่ไม่มีม้าเร็ว</div></div>
-    </div>
-
-    <div class="card-section-label">ยอดสรรหาตามตำแหน่ง <span class="csl-note">(รายวัน)</span></div>
-    <div class="kpi-row" id="r_positionRow"></div>
-  </div><!-- /#execSummaryCapture -->
-
-  <main id="reportContent">
-
-    <div class="report-block">
-      <h2 class="report-h2">1. ทีมที่ต่ำกว่า 6 คน</h2>
-      <p class="report-sub">นับจากผลรวมกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) ของแต่ละทีม (เฉพาะทีม Active)</p>
-      <div class="table-scroll"><table class="report-table" id="r_table_below6"></table></div>
-    </div>
-
-    <div class="report-block">
-      <h2 class="report-h2">2. ทีมที่ไม่มี "ม้าเร็ว" </h2>
-      <p class="report-sub">นับรวมทั้งกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) (เฉพาะทีม Active)</p>
-      <div class="table-scroll"><table class="report-table" id="r_table_norider"></table></div>
-    </div>
-
-    <div class="report-block">
-      <h2 class="report-h2">3. ทีมที่ต่ำกว่า 8 คน</h2>
-      <p class="report-sub">นับจากผลรวมกำลังพลปัจจุบัน + รอเข้ามารายงานตัว + ฝึกงาน (รอบรรจุ) ของแต่ละทีม (เฉพาะทีม Active)</p>
-      <div class="table-scroll"><table class="report-table" id="r_table_below8"></table></div>
-    </div>
-
-  </main>
-
-  <footer>
-    <p>รีพอทนี้สรุปจากข้อมูลล่าสุดในไฟล์ ณ ขณะสร้างรายงาน หากแก้ไขเป้าหมายกำลังพลของทีมในหน้า "กำลังพล" รายการข้อ 1 และ 3 จะไม่เปลี่ยนตาม เนื่องจากใช้เกณฑ์ตายตัว (6 คน และ 8 คน) ไม่ใช่เป้าหมายที่ตั้งไว้ของแต่ละทีม</p>
-  </footer>
-</section>
-
-</div><!-- /#appRoot -->
 
 <script>
-let FULL, P1, P2, DATA, NEW_ZONES, FUNNEL;
+if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
+  Chart.register(ChartDataLabels);
+}
 
-/* ============ TAB SWITCHING ============ */
-let reportInited = false;
+const SPREADSHEET_ID = "1zYZFaFEups9XDVs2yw_ve4E0JNPCEKalnt8yh-_rwV0";
+const GID_BE_ALL = "812175426";
+const GID_RECRUIT = "140398926";
+
+let empMap = new Map();
+let storeCodeSet = new Set();
+let storeTypeProvinceMap = new Map();
+let recruitStoreAreaMap = new Map();
+let recruitStoreRawAreaMap = new Map();
+let recruitStoreCodeSet = new Set();
+let recruitBeerTypeMap = new Map();
+let resigned2026 = [];
+
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const loadingBox = document.getElementById('loadingBox');
+const errorBox = document.getElementById('errorBox');
+const content = document.getElementById('content');
+const refreshBtn = document.getElementById('refreshBtn');
+const syncFoot = document.getElementById('syncFoot');
+
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('page-'+btn.dataset.page).classList.add('active');
-    if(btn.dataset.page==='daily' && !dailyInited){ initDaily(); dailyInited = true; }
-    if(btn.dataset.page==='report' && !reportInited){ initReport(); reportInited = true; }
+    document.getElementById(btn.dataset.page).classList.add('active');
   });
 });
 
-/* ============ PAGE 1: MANPOWER ============ */
-let activeRegion = 'all';
-let shortOnly = false;
-let shortBasis = 'current';
-let searchTerm = '';
-const targetOverrides = {};
-const hasClaudeStorage = !!(window.storage && window.storage.get && window.storage.set);
-const LS_KEY = 'sbb_target_overrides_v1';
-function lsAvailable(){
-  try{ const k='__t'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
-  catch(e){ return false; }
+function parseDMY(s){
+  if(!s) return null;
+  const p = String(s).trim().split('/');
+  if(p.length!==3) return null;
+  const d=parseInt(p[0],10), m=parseInt(p[1],10), y=parseInt(p[2],10);
+  if(!d||!m||!y) return null;
+  const dt = new Date(y, m-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
 }
-const hasLocalStorage = !hasClaudeStorage && lsAvailable();
+function fmtDate(dt){
+  if(!dt) return '-';
+  const dd = String(dt.getDate()).padStart(2,'0');
+  const mm = String(dt.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${dt.getFullYear()}`;
+}
 
-function safeKey(team){ return ('target_'+team.team).replace(/[\s\/\\'"]+/g, '_'); }
-function getTarget(team){ const k=safeKey(team); return targetOverrides.hasOwnProperty(k) ? targetOverrides[k] : team.required; }
-function flashSaved(){
-  const el = document.getElementById('saveFlash');
-  el.classList.add('show');
-  clearTimeout(window.__flashTimer);
-  window.__flashTimer = setTimeout(()=>el.classList.remove('show'), 1200);
-}
-async function loadOverrides(){
-  if(hasClaudeStorage){
-    try{
-      const res = await window.storage.list('target_', false);
-      if(res && res.keys && res.keys.length){
-        await Promise.all(res.keys.map(async k=>{
-          try{ const r = await window.storage.get(k, false); if(r && r.value!==undefined) targetOverrides[k]=parseFloat(r.value); }catch(e){}
-        }));
+let jsonpCounter = 0;
+function fetchGviz(gid){
+  return new Promise((resolve, reject)=>{
+    jsonpCounter++;
+    const cbName = 'gvizCallback_' + jsonpCounter + '_' + Date.now();
+    const script = document.createElement('script');
+    let done = false;
+    const cleanup = ()=>{ delete window[cbName]; if(script.parentNode) script.parentNode.removeChild(script); };
+    window[cbName] = function(response){
+      done = true;
+      try{
+        if(!response || response.status === 'error'){
+          const msg = (response && response.errors) ? response.errors.map(e=>e.detailed_message||e.message).join('; ') : 'ไม่สามารถอ่านข้อมูลจากชีตนี้ได้';
+          cleanup(); reject(new Error(msg)); return;
+        }
+        const table = response.table;
+        const rows = (table.rows||[]).map(r=>
+          (r.c||[]).map(cell=>{
+            if(!cell) return '';
+            if(cell.f !== undefined && cell.f !== null) return String(cell.f);
+            if(cell.v !== undefined && cell.v !== null) return String(cell.v);
+            return '';
+          })
+        );
+        cleanup();
+        resolve(rows);
+      }catch(err){
+        cleanup();
+        reject(new Error('แปลงข้อมูลจากชีตไม่สำเร็จ: ' + err.message));
       }
-    }catch(e){ console.error('loadOverrides failed', e); }
-  } else if(hasLocalStorage){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(raw){ Object.assign(targetOverrides, JSON.parse(raw)); }
-    }catch(e){ console.error('loadOverrides (localStorage) failed', e); }
-  }
-}
-function saveOverridesToLocalStorage(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(targetOverrides)); }catch(e){ console.error(e); }
-}
-async function setTarget(team, value){
-  const k = safeKey(team);
-  targetOverrides[k] = value;
-  if(hasClaudeStorage){ try{ await window.storage.set(k, String(value), false); flashSaved(); }catch(e){ console.error(e); } }
-  else if(hasLocalStorage){ saveOverridesToLocalStorage(); flashSaved(); }
-  else { flashSaved(); }
-  render();
-}
-async function resetAllTargets(){
-  const keys = Object.keys(targetOverrides);
-  if(hasClaudeStorage){ await Promise.all(keys.map(k=>window.storage.delete(k, false).catch(()=>{}))); }
-  keys.forEach(k=>delete targetOverrides[k]);
-  if(hasLocalStorage){ saveOverridesToLocalStorage(); }
-  render();
-}
-
-
-function statusClass(current, target){
-  if(current < target*0.625) return 'status-red';
-  if(current < target) return 'status-amber';
-  return 'status-green';
-}
-function sv(val, extraCls){ return `<span class="sub-val ${val===0?'zero':''} ${extraCls||''}">${val}</span>`; }
-
-function teamRow(team, isZoneStart){
-  const target = getTarget(team);
-  const cls = statusClass(team.current_total, target);
-  const grandCls = statusClass(team.grand_total, target);
-  const rowCls = isZoneStart ? 'zone-divider' : '';
-  const key = safeKey(team);
-  return `<tr class="${rowCls}" data-current="${team.current_total}" data-grand="${team.grand_total}" data-target="${target}" data-search="${(team.team+' '+team.head).toLowerCase()}">
-      <td class="col-team"><div class="team-name">${team.team}</div></td>
-      <td class="col-head"><div class="head-name">${team.head||'-'}</div></td>
-      <td><input type="number" class="target-cell" data-key="${key}" value="${target}" min="1" max="50"></td>
-      <td><span class="tot-current ${cls}">${team.current_total}</span></td>
-      <td>${sv(team.activity)}</td>
-      <td>${sv(team.be)}</td>
-      <td>${sv(team.assistant)}</td>
-      <td>${sv(team.rider)}</td>
-      <td>${sv(team.sales)}</td>
-      <td>${sv(team.deputy_backup)}</td>
-      <td>${sv(team.leader_backup)}</td>
-      <td><span class="tot-pending ${team.pending_total===0?'zero':''}">${team.pending_total}</span></td>
-      <td>${sv(team.p_assistant)}</td>
-      <td>${sv(team.p_rider)}</td>
-      <td>${sv(team.p_sales)}</td>
-      <td><span class="tot-training ${team.training_total===0?'zero':''}">${team.training_total}</span></td>
-      <td>${sv(team.t_assistant)}</td>
-      <td>${sv(team.t_rider)}</td>
-      <td>${sv(team.t_sales)}</td>
-      <td><span class="tot-grand ${grandCls}">รวม ${team.grand_total}</span></td>
-    </tr>`;
-}
-
-function headerRows(){
-  return `<thead>
-    <tr>
-      <th class="col-team" rowspan="2" style="text-align:left">ทีมย่อย</th>
-      <th class="col-head" rowspan="2" style="text-align:left">หัวหน้าทีมเชียร์</th>
-      <th rowspan="2">กำลังพล<br>ที่ต้องการ</th>
-      <th class="grp-current" colspan="8">กำลังพลปัจจุบัน</th>
-      <th class="grp-pending" colspan="4">รอเข้ามารายงานตัว</th>
-      <th class="grp-training" colspan="4">ฝึกงาน (รอบรรจุ)</th>
-      <th rowspan="2">รวม<br>[F+O+S]</th>
-    </tr>
-    <tr>
-      <th class="sub-current">กำลังพล<br>ปัจจุบัน</th>
-      <th class="sub-current">SBB คนเก่งพลัส_<br>กิจกรรม</th>
-      <th class="sub-current">SBB คนเก่งพลัส_<br>BE</th>
-      <th class="sub-current">ผู้ช่วยทีม</th>
-      <th class="sub-current">ม้าเร็ว</th>
-      <th class="sub-current">สาวบาวแดง</th>
-      <th class="sub-current">รองหัวหน้าทีม<br>+ทดแทนรองยศ</th>
-      <th class="sub-current">หัวหน้าทีมเชียร์<br>+ทดแทน</th>
-      <th class="sub-pending">รอเข้ามา<br>รายงานตัว</th>
-      <th class="sub-pending">ผู้ช่วยทีม</th>
-      <th class="sub-pending">ม้าเร็ว</th>
-      <th class="sub-pending">สาวบาวแดง</th>
-      <th class="sub-training">ฝึกงาน<br>(รอบรรจุ)</th>
-      <th class="sub-training">ผู้ช่วยทีม</th>
-      <th class="sub-training">ม้าเร็ว</th>
-      <th class="sub-training">สาวบาวแดง</th>
-    </tr>
-  </thead>`;
-}
-
-function regionTable(region){
-  const rows = region.teams.map((t,i)=>teamRow(t, i===0)).join('');
-  return `<div class="table-scroll"><table class="roster">${headerRows()}<tbody>${rows}</tbody></table></div>`;
-}
-function regionTotals(region){
-  let current=0, count=0, pending=0, training=0, grand=0, required=0;
-  region.teams.forEach(t=>{current+=t.current_total; count++; pending+=t.pending_total; training+=t.training_total; grand+=t.grand_total; required+=getTarget(t);});
-  return {current, required, count, pending, training, grand};
-}
-
-function render(){
-  const main = document.getElementById('mainContent');
-  main.innerHTML='';
-  let grandCurrent=0, grandRequired=0, grandTeams=0, belowSixCount=0;
-  const BELOW_THRESHOLD = 6;
-
-  DATA.forEach(region=>{
-    if(activeRegion!=='all' && region.bigregion!==activeRegion) return;
-    const {current, required, count, pending, training, grand} = regionTotals(region);
-    grandCurrent+=current; grandRequired+=required; grandTeams+=count;
-    region.teams.forEach(t=>{ if(t.grand_total < BELOW_THRESHOLD) belowSixCount++; });
-
-    const fillPct = required>0 ? Math.min((current/required*100),100) : 0;
-    const fillColor = current>=required? '#3f7a52' : (current<required*0.7? '#b8473a':'#d39a2d');
-
-    const block = document.createElement('div');
-    block.className='region-block';
-    block.innerHTML = `
-      <div class="region-head">
-        <span class="caret">▾</span>
-        <h2>${region.bigregion}</h2>
-        <div class="region-stats">
-          <span>ทีม <b>${count}</b></span>
-          <span>ปัจจุบัน <b>${current}</b> / เป้า <b>${required}</b></span>
-          <span>รอ+ฝึกงาน <b>${pending+training}</b></span>
-          <span>รวม <b>${grand}</b></span>
-          <div class="region-fillbar"><div style="width:${fillPct}%;background:${fillColor}"></div></div>
-        </div>
-      </div>
-      <div class="region-body">${regionTable(region)}</div>
-    `;
-    block.querySelector('.region-head').addEventListener('click', ()=>block.classList.toggle('collapsed'));
-    main.appendChild(block);
-  });
-
-  if(main.innerHTML===''){ main.innerHTML = '<div class="empty-msg">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>'; }
-
-  document.getElementById('kpiTeams').textContent = grandTeams;
-  document.getElementById('kpiCurrent').textContent = grandCurrent;
-  document.getElementById('kpiRequired').textContent = grandRequired;
-  document.getElementById('kpiFill').textContent = grandRequired>0 ? Math.round(grandCurrent/grandRequired*100)+'%' : '–';
-  const fillEl = document.getElementById('kpiFill');
-  fillEl.className='v num ' + (grandCurrent>=grandRequired?'good':(grandCurrent<grandRequired*0.8?'bad':'warn'));
-  document.getElementById('kpiBelowSix').textContent = belowSixCount;
-  document.getElementById('fnGrand').textContent = grandCurrent + FUNNEL.pending_total_all + FUNNEL.training_total_all;
-
-  applyFilters();
-}
-function applyFilters(){
-  document.querySelectorAll('table.roster tbody tr').forEach(tr=>{
-    const cur = parseFloat(tr.dataset.current);
-    const grand = parseFloat(tr.dataset.grand);
-    const tgt = parseFloat(tr.dataset.target);
-    const txt = tr.dataset.search;
-    let show = true;
-    if(shortOnly){
-      const basisVal = shortBasis==='grand' ? grand : cur;
-      if(basisVal>=tgt) show=false;
-    }
-    if(searchTerm && !txt.includes(searchTerm)) show=false;
-    tr.classList.toggle('row-hide', !show);
-  });
-  document.querySelectorAll('.region-block').forEach(rb=>{
-    const visibleRows = rb.querySelectorAll('tbody tr:not(.row-hide)').length;
-    rb.style.display = visibleRows===0 ? 'none' : '';
+    };
+    script.onerror = function(){
+      if(done) return;
+      cleanup();
+      reject(new Error('โหลดสคริปต์จาก Google Sheets ไม่สำเร็จ (ตรวจสอบว่าชีตแชร์แบบ "Anyone with the link can view")'));
+    };
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cbName};reqId:${jsonpCounter}`;
+    script.src = url;
+    document.head.appendChild(script);
+    setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('หมดเวลารอข้อมูลจาก Google Sheets (timeout)')); } }, 20000);
   });
 }
-function buildRegionChips(){
-  const wrap = document.getElementById('regionChips');
-  const regions = ['all', ...DATA.map(r=>r.bigregion)];
-  wrap.innerHTML = regions.map(r=>`<button class="chip ${r===activeRegion?'active':''}" data-region="${r}">${r==='all'?'ทั้งหมด':r}</button>`).join('');
-  wrap.querySelectorAll('.chip').forEach(ch=>{
-    ch.addEventListener('click', ()=>{
-      activeRegion = ch.dataset.region;
-      wrap.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-      ch.classList.add('active');
-      render();
-    });
-  });
-}
-function renderFunnel(){
-  document.getElementById('fnPending').textContent = FUNNEL.pending_total_all;
-  document.getElementById('fnTraining').textContent = FUNNEL.training_total_all;
-  document.getElementById('fnNoShow').textContent = FUNNEL.no_show;
-}
-function renderNewZones(){
-  if(!NEW_ZONES || NEW_ZONES.length===0) return;
-  const totalPeople = NEW_ZONES.reduce((s,b)=>s+b.teams.reduce((s2,t)=>s2+(t.grand_total!==undefined?t.grand_total:t.training_total),0),0);
-  const totalTeams = NEW_ZONES.reduce((s,b)=>s+b.teams.length,0);
-  if(totalTeams===0) return;
-  document.getElementById('newZoneSection').style.display='';
-  document.getElementById('newZoneSummary').textContent = `${totalTeams} ทีม / ${totalPeople} คน (รอเข้ารายงานตัว + ฝึกงาน) ในทีมที่ยังไม่อยู่ใน "กำลังพลที่ต้องการ"`;
-  document.getElementById('newZoneBody').innerHTML = NEW_ZONES.map(b=>`
-    <div class="nz-region"><h4>${b.bigregion} (${b.teams.length} ทีม)</h4>
-    <div class="nz-grid">${b.teams.map(t=>{
-      const grand = t.grand_total!==undefined ? t.grand_total : t.training_total;
-      const pTotal = t.pending_total||0, tTotal = t.training_total||0;
-      return `<div class="nz-card"><div class="nzname">${t.team}</div><div class="nzcount">${grand} คน</div>
-      <div class="nzbreak">รอเข้ารายงานตัว ${pTotal} · ฝึกงาน ${tTotal}</div>
-      <div class="nzbreak">สาวบาวแดง ${(t.sales||0)+(t.p_sales||0)} · ม้าเร็ว ${(t.rider||0)+(t.p_rider||0)} · ผู้ช่วยทีม ${(t.assistant||0)+(t.p_assistant||0)}</div></div>`;
-    }).join('')}</div></div>`).join('');
+
+function normalizeBeerType(raw){
+  raw = (raw||'').trim();
+  return raw.includes('เบียร์สด') ? 'เบียร์สด' : 'เบียร์ขวด';
 }
 
-document.getElementById('resetAllBtn').addEventListener('click', resetAllTargets);
-document.getElementById('mainContent').addEventListener('change', (e)=>{
-  if(e.target.classList.contains('target-cell')){
-    const val = parseInt(e.target.value);
-    const key = e.target.dataset.key;
-    if(val>0){
-      const team = DATA.flatMap(r=>r.teams).find(t=>safeKey(t)===key);
-      if(team) setTarget(team, val);
+function levenshtein(a, b){
+  const m = a.length, n = b.length;
+  if(m===0) return n;
+  if(n===0) return m;
+  const dp = Array.from({length:m+1}, ()=> new Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
     }
   }
-});
-document.getElementById('searchBox').addEventListener('input', (e)=>{ searchTerm=e.target.value.trim().toLowerCase(); applyFilters(); });
-document.getElementById('shortOnly').addEventListener('change', (e)=>{ shortOnly=e.target.checked; applyFilters(); });
-document.getElementById('shortOnlyBasis').addEventListener('change', (e)=>{ shortBasis=e.target.value; applyFilters(); });
-document.getElementById('newZoneToggle').addEventListener('click', ()=>{ document.getElementById('newZoneSection').classList.toggle('open'); });
-
-async function initManpower(){
-  await loadOverrides();
-  buildRegionChips();
-  renderFunnel();
-  renderNewZones();
-  render();
+  return dp[m][n];
 }
 
-/* ============ PAGE 2: DAILY ============ */
-let dailyInited = false;
-let d_search = '';
-let d_position = 'all';
-let d_stage = 'all';
-let d_owner = 'all';
-let d_dateFrom = '';
-let d_dateTo = '';
-
-const STAGE_PILL = {
-  'รอเข้ารายงานตัว': 'pill-pending',
-  'อยู่ระหว่างฝึกงาน': 'pill-training',
-  'บรรจุแล้ว': 'pill-placed',
-  'ไม่ผ่าน/ยกเลิก': 'pill-dropped',
-  'ไม่มารายงานตัว': 'pill-noshow',
-};
-function thaiDate(iso){
-  const d = new Date(iso+'T00:00:00');
-  return d.toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
-}
-function dayBadges(day){
-  const parts = Object.entries(day.by_position).map(([k,v])=>`<span class="day-badge">${k} <b>${v}</b></span>`);
-  return parts.join('');
-}
-function recordRow(r){
-  const stageCls = STAGE_PILL[r.stage] || '';
-  return `<tr data-search="${(r.name+' '+r.team).toLowerCase()}" data-position="${r.position}" data-stage="${r.stage}" data-owner="${r.owner}">
-    <td>${r.name}</td>
-    <td>${r.position}</td>
-    <td>${r.team}</td>
-    <td><span class="pill ${stageCls}">${r.stage}</span></td>
-    <td class="owner-tag">${r.owner}</td>
-  </tr>`;
-}
-function dayBlock(day){
-  const rows = day.records.map(recordRow).join('');
-  return `<div class="day-block" data-date="${day.date}">
-    <div class="day-head">
-      <span class="day-caret">▾</span>
-      <div><div class="dlabel">${thaiDate(day.date)}</div><div class="dsub">${day.count} คน</div></div>
-      <div class="day-badges">${dayBadges(day)}</div>
-    </div>
-    <div class="day-body">
-      <table class="daily">
-        <thead><tr><th>ชื่อ</th><th>ตำแหน่ง</th><th>พื้นที่ (ทีมย่อย)</th><th>สถานะ</th><th>ผู้สรรหา</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  </div>`;
-}
-function renderDaily(){
-  const main = document.getElementById('dailyContent');
-  main.innerHTML = P2.days.map(dayBlock).join('');
-  main.querySelectorAll('.day-head').forEach(h=>h.addEventListener('click', ()=>h.closest('.day-block').classList.toggle('collapsed')));
-  applyDailyFilters();
-}
-function applyDailyFilters(){
-  const anyFilter = (d_position!=='all' || d_stage!=='all' || d_owner!=='all' || !!d_search);
-  document.querySelectorAll('.day-block').forEach(db=>{
-    const dateStr = db.dataset.date;
-    const inRange = (!d_dateFrom || dateStr>=d_dateFrom) && (!d_dateTo || dateStr<=d_dateTo);
-    db.classList.toggle('date-hide', !inRange);
-    if(!inRange) return;
-    db.querySelectorAll('tbody tr').forEach(tr=>{
-      let show = true;
-      if(d_position!=='all' && tr.dataset.position!==d_position) show=false;
-      if(d_stage!=='all' && tr.dataset.stage!==d_stage) show=false;
-      if(d_owner!=='all' && tr.dataset.owner!==d_owner) show=false;
-      if(d_search && !tr.dataset.search.includes(d_search)) show=false;
-      tr.style.display = show ? '' : 'none';
-    });
-    const total = db.querySelectorAll('tbody tr').length;
-    const visible = Array.from(db.querySelectorAll('tbody tr')).filter(tr=>tr.style.display!=='none').length;
-    db.classList.toggle('row-hide', visible===0);
-    const dsub = db.querySelector('.dsub');
-    dsub.textContent = anyFilter ? `${visible} / ${total} คน` : `${total} คน`;
-  });
-  buildOwnerSummary();
-}
-function recordMatchesFilters(r, dateStr){
-  if(d_dateFrom && dateStr<d_dateFrom) return false;
-  if(d_dateTo && dateStr>d_dateTo) return false;
-  if(d_position!=='all' && r.position!==d_position) return false;
-  if(d_stage!=='all' && r.stage!==d_stage) return false;
-  if(d_owner!=='all' && r.owner!==d_owner) return false;
-  if(d_search && !(r.name+' '+r.team).toLowerCase().includes(d_search)) return false;
-  return true;
-}
-function buildOwnerSummary(){
-  const positions = P2.filters.positions;
-  const pivot = {}; // owner -> {position: count}
-  const posTotals = {}; positions.forEach(p=>posTotals[p]=0);
-  let grandTotal = 0;
-
-  P2.days.forEach(day=>{
-    day.records.forEach(r=>{
-      if(!recordMatchesFilters(r, day.date)) return;
-      if(!pivot[r.owner]) pivot[r.owner] = {};
-      pivot[r.owner][r.position] = (pivot[r.owner][r.position]||0) + 1;
-      posTotals[r.position] = (posTotals[r.position]||0) + 1;
-      grandTotal++;
-    });
-  });
-
-  const owners = Object.keys(pivot).sort((a,b)=> {
-    const ta = positions.reduce((s,p)=>s+(pivot[a][p]||0),0);
-    const tb = positions.reduce((s,p)=>s+(pivot[b][p]||0),0);
-    return tb - ta;
-  });
-
-  const holder = document.getElementById('ownerSummaryHolder');
-  if(owners.length===0){
-    holder.innerHTML = '<div class="empty-msg">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>';
-    return;
+const MOO_TARGETS = ['หมูกระทะ','หมูจุ่ม'];
+function fuzzyContainsMoo(text){
+  if(!text) return false;
+  const cleaned = text.replace(/\s+/g,'');
+  for(const t of MOO_TARGETS){
+    for(let len=t.length-1; len<=t.length+1; len++){
+      if(len<2) continue;
+      for(let i=0;i+len<=cleaned.length;i++){
+        const sub = cleaned.substr(i,len);
+        if(levenshtein(sub,t) <= 1) return true;
+      }
+    }
   }
-
-  let html = '<table class="owner-summary"><thead><tr><th class="own-th" data-act="reset-owner">ผู้สรรหา</th>';
-  positions.forEach(p=>{ const active = d_position===p ? ' th-active':''; html += `<th class="pos-th${active}" data-pos="${p}">${p}</th>`; });
-  html += '<th>รวม</th></tr></thead><tbody>';
-  owners.forEach(o=>{
-    const rowTotal = positions.reduce((s,p)=>s+(pivot[o][p]||0),0);
-    const ownActive = d_owner===o ? ' own-active':'';
-    html += `<tr><td class="own-td${ownActive}" data-owner="${o}">${o}</td>`;
-    positions.forEach(p=>{ const v = pivot[o][p]||0; html += `<td>${v||''}</td>`; });
-    html += `<td class="sum-cell">${rowTotal}</td></tr>`;
-  });
-  html += `<tr class="grand-row"><td colspan="${positions.length+1}">รวม</td><td class="sum-cell">${grandTotal}</td></tr>`;
-  html += '</tbody></table>';
-  holder.innerHTML = html;
-
-  holder.querySelectorAll('.pos-th').forEach(th=>{
-    th.addEventListener('click', ()=>setPositionFilter(d_position===th.dataset.pos ? 'all' : th.dataset.pos));
-  });
-  const ownTh = holder.querySelector('.own-th');
-  if(ownTh) ownTh.addEventListener('click', ()=>setOwnerFilter('all'));
-  holder.querySelectorAll('.own-td').forEach(td=>{
-    td.addEventListener('click', ()=>setOwnerFilter(d_owner===td.dataset.owner ? 'all' : td.dataset.owner));
-  });
-}
-function setPositionFilter(value){
-  d_position = value;
-  document.querySelectorAll('#positionChips .chip').forEach(c=>c.classList.toggle('active', c.dataset.pos===value));
-  applyDailyFilters();
-}
-function setOwnerFilter(value){
-  d_owner = value;
-  const sel = document.getElementById('ownerSelect');
-  if(sel) sel.value = value;
-  applyDailyFilters();
-}
-function buildDailyFilters(){
-  const posWrap = document.getElementById('positionChips');
-  const positions = ['all', ...P2.filters.positions];
-  posWrap.innerHTML = positions.map(p=>`<button class="chip ${p==='all'?'active':''}" data-pos="${p}">${p==='all'?'ทุกตำแหน่ง':p}</button>`).join('');
-  posWrap.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click', ()=>setPositionFilter(ch.dataset.pos)));
-
-  const stageWrap = document.getElementById('statusChips');
-  const stages = ['all','รอเข้ารายงานตัว','อยู่ระหว่างฝึกงาน','บรรจุแล้ว','ไม่ผ่าน/ยกเลิก','ไม่มารายงานตัว'];
-  stageWrap.innerHTML = stages.map(s=>`<button class="chip ${s==='all'?'active':''}" data-st="${s}">${s==='all'?'ทุกสถานะ':s}</button>`).join('');
-  stageWrap.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click', ()=>{
-    d_stage = ch.dataset.st;
-    stageWrap.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-    ch.classList.add('active');
-    applyDailyFilters();
-  }));
-
-  const ownerSel = document.getElementById('ownerSelect');
-  ownerSel.innerHTML = '<option value="all">ผู้สรรหาทั้งหมด</option>';
-  P2.filters.owners.forEach(o=>{
-    const opt = document.createElement('option');
-    opt.value=o; opt.textContent=o+' ('+(P2.totals.by_owner[o]||0)+')';
-    ownerSel.appendChild(opt);
-  });
-  ownerSel.value = d_owner;
-  const newOwnerSel = ownerSel.cloneNode(true);
-  ownerSel.parentNode.replaceChild(newOwnerSel, ownerSel);
-  newOwnerSel.addEventListener('change', ()=>{ d_owner = newOwnerSel.value; applyDailyFilters(); });
-}
-function renderDailyKPI(){
-  document.getElementById('d_kpiTotal').textContent = P2.totals.count;
-  document.getElementById('d_kpiPending').textContent = P2.totals.by_stage['รอเข้ารายงานตัว']||0;
-  document.getElementById('d_kpiTraining').textContent = P2.totals.by_stage['อยู่ระหว่างฝึกงาน']||0;
-  document.getElementById('d_kpiPlaced').textContent = P2.totals.by_stage['บรรจุแล้ว']||0;
-  document.getElementById('d_kpiDropped').textContent = P2.totals.by_stage['ไม่ผ่าน/ยกเลิก']||0;
-  document.getElementById('d_kpiNoshow').textContent = P2.totals.by_stage['ไม่มารายงานตัว']||0;
-}
-document.getElementById('d_searchBox').addEventListener('input', (e)=>{ d_search=e.target.value.trim().toLowerCase(); applyDailyFilters(); });
-document.getElementById('d_dateFrom').addEventListener('change', (e)=>{ d_dateFrom=e.target.value; applyDailyFilters(); });
-document.getElementById('d_dateTo').addEventListener('change', (e)=>{ d_dateTo=e.target.value; applyDailyFilters(); });
-document.getElementById('d_dateResetBtn').addEventListener('click', ()=>{
-  d_dateFrom=''; d_dateTo='';
-  document.getElementById('d_dateFrom').value='';
-  document.getElementById('d_dateTo').value='';
-  applyDailyFilters();
-});
-
-function initDaily(){
-  renderDailyKPI();
-  const dfEl = document.getElementById('d_dateFrom');
-  const dtEl = document.getElementById('d_dateTo');
-  dfEl.min = P2.date_range.min; dfEl.max = P2.date_range.max;
-  dtEl.min = P2.date_range.min; dtEl.max = P2.date_range.max;
-  buildDailyFilters();
-  renderDaily();
+  return false;
 }
 
-/* ============ PAGE 3: REPORT ============ */
-function allTeamsFlat(){
+function classifyStoreType(rawType, storeName){
+  const combined = (storeName||'') + ' ' + (rawType||'');
+  if(fuzzyContainsMoo(combined)) return 'หมูกระทะ/หมูจุ่ม';
+  return (rawType && rawType!=='#N/A') ? rawType : null;
+}
+
+function dedupeRows(rows){
+  const seen = new Set();
   const out = [];
-  DATA.forEach(region=>{ region.teams.forEach(t=>{ out.push(Object.assign({bigregion: region.bigregion}, t)); }); });
+  rows.forEach(r=>{
+    const key = (r||[]).join('\u0001');
+    if(!seen.has(key)){ seen.add(key); out.push(r); }
+  });
   return out;
 }
-function teamListTable(teams, sortByGrand){
-  if(sortByGrand) teams = teams.slice().sort((a,b)=>a.grand_total-b.grand_total);
-  if(teams.length===0){
-    return '<tbody><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีทีมที่เข้าเงื่อนไขนี้</td></tr></tbody>';
-  }
-  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ปัจจุบัน</th><th class="num-cell">รอ+ฝึกงาน</th><th class="num-cell">รวม</th></tr></thead><tbody>`;
-  teams.forEach(t=>{
-    const sevCls = t.grand_total < t.required*0.625 ? 'sev-red' : (t.grand_total < t.required ? 'sev-amber' : '');
-    html += `<tr class="${sevCls}"><td>${t.bigregion}</td><td>${t.team}</td><td>${t.head||'-'}</td><td class="num-cell">${t.current_total}</td><td class="num-cell">${t.pending_total+t.training_total}</td><td class="num-cell">${t.grand_total}</td></tr>`;
+
+function processData(beAllRowsRaw, recruitRowsRaw){
+  const beAllRows = dedupeRows(beAllRowsRaw);
+  const recruitRows = dedupeRows(recruitRowsRaw);
+  empMap = new Map();
+  storeCodeSet = new Set();
+  storeTypeProvinceMap = new Map();
+
+  beAllRows.forEach(r=>{
+    if(!r || r.length<10) return;
+    const store=(r[0]||'').trim(), storeName=r[1]||'', emp=(r[2]||'').trim(), name=r[3]||'',
+          cin=parseDMY(r[4]), cout=parseDMY(r[5]), storeTypeRaw=(r[7]||'').trim(), province=(r[8]||'').trim(), status=(r[9]||'').trim();
+    const overriddenType = classifyStoreType(storeTypeRaw, storeName);
+    if(store){
+      storeCodeSet.add(store);
+      const cur = storeTypeProvinceMap.get(store) || {};
+      if(overriddenType) cur.storeType = overriddenType;
+      if(province && province!=='#N/A') cur.province = province;
+      if(!cur.storeName) cur.storeName = storeName;
+      storeTypeProvinceMap.set(store, cur);
+    }
+    if(!emp) return;
+    let d = null;
+    if(cin && cout) d = cout > cin ? cout : cin;
+    else d = cout || cin;
+    const cur = empMap.get(emp);
+    if(!cur){
+      empMap.set(emp,{emp,name,firstDate:cin||cout,lastDate:d,status,store,storeName,province});
+    } else {
+      if(d && (!cur.lastDate || d > cur.lastDate)){
+        cur.lastDate=d; cur.status=status; cur.store=store; cur.storeName=storeName; cur.province=province; cur.name=name||cur.name;
+      }
+      const earliest = cin || cout;
+      if(earliest && (!cur.firstDate || earliest < cur.firstDate)) cur.firstDate = earliest;
+    }
   });
-  html += '</tbody>';
-  return html;
-}
-function riderTable(teams){
-  if(teams.length===0){
-    return '<tbody><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px;">ไม่มีทีมที่เข้าเงื่อนไขนี้ — ทุกทีมมีม้าเร็วอย่างน้อย 1 คน</td></tr></tbody>';
-  }
-  let html = `<thead><tr><th>ภูมิภาค</th><th>ทีมย่อย</th><th>หัวหน้าทีมเชียร์</th><th class="num-cell">ม้าเร็ว ปัจจุบัน</th><th class="num-cell">ม้าเร็ว รอ+ฝึกงาน</th></tr></thead><tbody>`;
-  teams.forEach(t=>{
-    html += `<tr class="sev-red"><td>${t.bigregion}</td><td>${t.team}</td><td>${t.head||'-'}</td><td class="num-cell">${t.rider}</td><td class="num-cell">${t.p_rider+t.t_rider}</td></tr>`;
+
+  recruitStoreAreaMap = new Map();
+  recruitStoreRawAreaMap = new Map();
+  recruitStoreCodeSet = new Set();
+  recruitBeerTypeMap = new Map();
+  window.__recruit = recruitRows.map(r=>{
+    if(!r) return null;
+    const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').trim(), storeName=r[2]||'',
+          jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||'');
+    if(!storeCode) return null;
+    if(area) recruitStoreAreaMap.set(storeCode, area);
+    if(rawArea) recruitStoreRawAreaMap.set(storeCode, rawArea);
+    if(r[23]) recruitBeerTypeMap.set(storeCode, beerType);
+    recruitStoreCodeSet.add(storeCode);
+    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, hadBE: storeCodeSet.has(storeCode) };
+  }).filter(Boolean);
+
+  const chosenByStore = new Map();
+  window.__recruit.forEach(x=>{
+    const existing = chosenByStore.get(x.storeCode);
+    if(!existing){
+      chosenByStore.set(x.storeCode, x);
+    } else if(existing.jobStatus !== 'สรรหา' && x.jobStatus === 'สรรหา'){
+      chosenByStore.set(x.storeCode, x);
+    }
   });
-  html += '</tbody>';
-  return html;
+  window.__recruitByStore = [...chosenByStore.values()];
+
+  resigned2026 = [...empMap.values()].filter(e=>
+    e.status === 'ลาออก' && e.lastDate && e.lastDate.getFullYear() === 2026
+  ).map(e=>{
+    const info = storeTypeProvinceMap.get(e.store) || {};
+    const area = recruitStoreAreaMap.get(e.store) || info.province || 'ไม่ทราบพื้นที่';
+    const rawArea = recruitStoreRawAreaMap.get(e.store) || info.province || 'ไม่ทราบพื้นที่';
+    const storeType = info.storeType || 'ไม่ระบุประเภท';
+    const tenureDays = (e.firstDate && e.lastDate) ? Math.max(1, Math.round((e.lastDate - e.firstDate) / 86400000)) : null;
+    const inStoreList = recruitStoreCodeSet.has(e.store);
+    return { ...e, area, rawArea, storeType, tenureDays, inStoreList };
+  }).sort((a,b)=> a.lastDate - b.lastDate);
+
+  renderPage1KPIs();
+  populateRecruitGroupFilter();
+  populateReport1Filters();
+  renderReport1();
+  attachSortableHeaders('report1HeadRow', report1SortState, renderReport1);
+  renderBeerTypeChart();
+  renderVacancyChart();
+  renderPage2KPIs();
+  renderBreakdowns();
+  renderReport2();
+  attachSortableHeaders('report2HeadRow', report2SortState, renderReport2);
+  renderZoneMonthlyChart();
+  renderAreaMonthlyChart();
+  renderStoreMonthlyChart();
+  populateFilters();
 }
-function computePositionStats(fromDate, toDate){
-  const byPos = {};
-  let total = 0;
-  P2.days.forEach(day=>{
-    if(fromDate && day.date < fromDate) return;
-    if(toDate && day.date > toDate) return;
-    Object.entries(day.by_position).forEach(([pos, cnt])=>{
-      byPos[pos] = (byPos[pos]||0) + cnt;
-      total += cnt;
+
+function renderPage1KPIs(){
+  document.getElementById('kpiAllStores').textContent = new Set(window.__recruitByStore.map(x=>x.storeCode)).size.toLocaleString();
+  const recruitOnly = window.__recruitByStore.filter(x=>x.jobStatus==='สรรหา');
+  document.getElementById('kpiRecruitStores').textContent = recruitOnly.length.toLocaleString();
+  document.getElementById('kpiHadBE').textContent = recruitOnly.filter(x=>x.hadBE).length.toLocaleString();
+  document.getElementById('kpiNeverBE').textContent = recruitOnly.filter(x=>!x.hadBE).length.toLocaleString();
+}
+
+let beerTypeChartInstance = null;
+let beerTypeChartFilter = 'ALL';
+function renderBeerTypeChart(){
+  if(typeof Chart === 'undefined') return;
+  const allCounts = new Map();
+  window.__recruitByStore.forEach(x=>{
+    const bt = beerTypeOf(x.storeCode);
+    allCounts.set(bt, (allCounts.get(bt)||0)+1);
+  });
+  const counts = beerTypeChartFilter==='ALL' ? allCounts : new Map([[beerTypeChartFilter, allCounts.get(beerTypeChartFilter)||0]]);
+  const labels = [...counts.keys()];
+  const data = [...counts.values()];
+  const colorMap = { 'เบียร์สด':'#0E6E5B', 'เบียร์ขวด':'#C9790C' };
+  const fallbackColors = ['#B5432C','#57696D'];
+  const colors = labels.map((l,i)=> colorMap[l] || fallbackColors[i%fallbackColors.length]);
+  const ctx = document.getElementById('beerTypeChart').getContext('2d');
+  if(beerTypeChartInstance) beerTypeChartInstance.destroy();
+  beerTypeChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, font:{ size:12 } } }, datalabels:{ color:'#fff', font:{ weight:'bold', size:13 }, formatter:(v)=> v } },
+      onClick:(evt, elements)=>{
+        if(!elements.length) return;
+        const clickedLabel = beerTypeChartInstance.data.labels[elements[0].index];
+        beerTypeChartFilter = (beerTypeChartFilter === clickedLabel) ? 'ALL' : clickedLabel;
+        report1BeerTypeVal = beerTypeChartFilter;
+        const sel = document.getElementById('report1BeerTypeFilter');
+        if(sel) sel.value = beerTypeChartFilter;
+        renderBeerTypeChart();
+        renderReport1();
+      }
+    }
+  });
+}
+
+let scopeFilterVal = 'IN300';
+function getScopedResigned(){
+  if(scopeFilterVal==='IN300') return resigned2026.filter(x=>x.inStoreList);
+  if(scopeFilterVal==='OUT300') return resigned2026.filter(x=>!x.inStoreList);
+  return resigned2026;
+}
+
+function topKey(map){
+  let top=null, max=-1;
+  map.forEach((v,k)=>{ if(v>max){max=v;top=k;} });
+  return top || '-';
+}
+
+function renderPage2KPIs(){
+  const rows = getScopedResigned();
+  document.getElementById('kpiResigned2026').textContent = rows.length.toLocaleString();
+  const tenures = rows.map(x=>x.tenureDays).filter(v=>v!==null);
+  const avg = tenures.length ? Math.round(tenures.reduce((a,b)=>a+b,0)/tenures.length) : 0;
+  document.getElementById('kpiAvgTenure').textContent = avg.toLocaleString();
+  const areaCounts = new Map(); rows.forEach(x=>areaCounts.set(x.area,(areaCounts.get(x.area)||0)+1));
+  const typeCounts = new Map(); rows.forEach(x=>typeCounts.set(x.storeType,(typeCounts.get(x.storeType)||0)+1));
+  document.getElementById('kpiTopArea').textContent = topKey(areaCounts);
+  document.getElementById('kpiTopType').textContent = topKey(typeCounts);
+  const inCount = resigned2026.filter(x=>x.inStoreList).length;
+  const outCount = resigned2026.filter(x=>!x.inStoreList).length;
+  document.getElementById('scopeCountPill').textContent = `ในรายชื่อ 300 ร้าน: ${inCount.toLocaleString()} คน — นอกเหนือ: ${outCount.toLocaleString()} คน`;
+}
+
+function renderBarList(containerId, countMap, colorClass, opts){
+  opts = opts || {};
+  const el = document.getElementById(containerId);
+  const entries = [...countMap.entries()].sort((a,b)=>b[1]-a[1]);
+  const max = entries.length ? entries[0][1] : 1;
+  if(!entries.length){ el.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;">ไม่มีข้อมูล</p>'; return; }
+  el.innerHTML = entries.map(([label,count])=>`
+    <div class="barrow ${colorClass||''} ${opts.clickable?'clickable':''} ${opts.selected===label?'selected':''}" data-label="${label.replace(/"/g,'&quot;')}">
+      <div class="lbl">${label}</div>
+      <div class="track"><div class="fill" style="width:${Math.round(count/max*100)}%"></div></div>
+      <div class="val">${count}</div>
+    </div>`).join('');
+  if(opts.clickable && opts.onClick){
+    el.querySelectorAll('.barrow').forEach(row=>{
+      row.addEventListener('click', ()=> opts.onClick(row.dataset.label));
     });
-  });
-  return { byPos, total };
+  }
 }
-function renderPositionCards(stats){
-  const row = document.getElementById('r_positionRow');
-  row.innerHTML = '';
-  const positions = Object.keys(stats.byPos).sort((a,b)=>stats.byPos[b]-stats.byPos[a]);
-  if(positions.length===0){
-    row.innerHTML = '<div class="empty-msg" style="grid-column:1/-1;">ไม่มีข้อมูลในช่วงวันที่ที่เลือก</div>';
+
+function tenureBucket(days){
+  if(days===null) return 'ไม่ทราบ';
+  if(days < 7) return '< 1 สัปดาห์';
+  if(days < 14) return '1-2 สัปดาห์';
+  if(days < 21) return '2-3 สัปดาห์';
+  if(days < 30) return '3-4 สัปดาห์';
+  if(days < 90) return '1-3 เดือน';
+  if(days < 180) return '3-6 เดือน';
+  if(days < 365) return '6-12 เดือน';
+  if(days < 730) return '1-2 ปี';
+  return '2 ปีขึ้นไป';
+}
+const TENURE_ORDER = ['< 1 สัปดาห์','1-2 สัปดาห์','2-3 สัปดาห์','3-4 สัปดาห์','1-3 เดือน','3-6 เดือน','6-12 เดือน','1-2 ปี','2 ปีขึ้นไป','ไม่ทราบ'];
+
+function rowsForBreakdown(excludeDims){
+  excludeDims = excludeDims || [];
+  let rows = getScopedResigned();
+  if(!excludeDims.includes('area') && areaFilterVal!=='ALL') rows = rows.filter(x=>x.area===areaFilterVal);
+  if(!excludeDims.includes('rawArea') && rawAreaFilterVal!=='ALL') rows = rows.filter(x=>x.rawArea===rawAreaFilterVal);
+  if(!excludeDims.includes('type') && typeFilterVal!=='ALL') rows = rows.filter(x=>x.storeType===typeFilterVal);
+  if(!excludeDims.includes('month') && monthFilterVal!=='ALL') rows = rows.filter(x=>x.lastDate && (x.lastDate.getMonth()+1)===+monthFilterVal);
+  if(!excludeDims.includes('tenure') && tenureFilterVal!=='ALL') rows = rows.filter(x=>tenureBucket(x.tenureDays)===tenureFilterVal);
+  const search = document.getElementById('searchEmp').value.trim().toLowerCase();
+  if(search) rows = rows.filter(x=>
+    (x.name||'').toLowerCase().includes(search) ||
+    (x.emp||'').toLowerCase().includes(search) ||
+    (x.storeName||'').toLowerCase().includes(search)
+  );
+  return rows;
+}
+
+function renderBreakdowns(){
+  const typeRows = rowsForBreakdown(['type']);
+  const tenureRows = rowsForBreakdown([]);
+
+  const typeCounts = new Map(); typeRows.forEach(x=>typeCounts.set(x.storeType,(typeCounts.get(x.storeType)||0)+1));
+  const tenureCounts = new Map();
+  TENURE_ORDER.forEach(k=>tenureCounts.set(k,0));
+  tenureRows.forEach(x=>{ const b=tenureBucket(x.tenureDays); tenureCounts.set(b,(tenureCounts.get(b)||0)+1); });
+  [...tenureCounts.entries()].forEach(([k,v])=>{ if(v===0) tenureCounts.delete(k); });
+
+  renderBarList('typeBreakdown', typeCounts, 'amber', {
+    clickable: true,
+    selected: typeFilterVal !== 'ALL' ? typeFilterVal : null,
+    onClick: (type)=> selectTypeFilter(type)
+  });
+  const tenureOrdered = new Map(TENURE_ORDER.filter(k=>tenureCounts.has(k)).map(k=>[k,tenureCounts.get(k)]));
+  renderBarList('tenureBreakdown', tenureOrdered, '');
+}
+
+function selectAreaFilter(area){
+  areaFilterVal = area;
+  document.getElementById('areaFilter').value = area;
+  currentDetailArea = area;
+  areaDetailStatusVal = 'ALL';
+  areaDetailTypeVal = 'ALL';
+  rawAreaFilterVal = 'ALL';
+  document.getElementById('rawAreaFilterR2').value = 'ALL';
+  document.getElementById('areaDetailSearch').value = '';
+  renderReport2();
+  renderBreakdowns();
+  renderZoneMonthlyChart();
+  renderAreaMonthlyChart();
+  renderStoreMonthlyChart();
+  populateFilters();
+  updateDetailPanels();
+  scrollToVisibleDetailPanel();
+}
+
+function clearAreaFilter(){
+  areaFilterVal = 'ALL';
+  currentDetailArea = null;
+  rawAreaFilterVal = 'ALL';
+  document.getElementById('areaFilter').value = 'ALL';
+  document.getElementById('rawAreaFilterR2').value = 'ALL';
+  renderReport2();
+  renderBreakdowns();
+  renderZoneMonthlyChart();
+  renderAreaMonthlyChart();
+  renderStoreMonthlyChart();
+  populateFilters();
+  updateDetailPanels();
+}
+
+let currentDetailArea = null;
+let areaDetailStatusVal = 'ALL';
+let areaDetailTypeVal = 'ALL';
+
+function storeTypeOf(storeCode){
+  const info = storeTypeProvinceMap.get(storeCode);
+  return (info && info.storeType) ? info.storeType : 'ไม่ระบุประเภท';
+}
+function beerTypeOf(storeCode){
+  return recruitBeerTypeMap.get(storeCode) || 'ไม่ระบุ';
+}
+
+function populateAreaDetailStatusFilter(){
+  const sel = document.getElementById('areaDetailStatusFilter');
+  const stores = window.__recruitByStore.filter(x=>x.area===currentDetailArea);
+  const statuses = [...new Set(stores.map(x=>x.jobStatus).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="ALL">ทุกสถานะ</option>' + statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+  sel.value = 'ALL';
+
+  const typeSel = document.getElementById('areaDetailTypeFilter');
+  const types = [...new Set(stores.map(x=>storeTypeOf(x.storeCode)))].sort();
+  typeSel.innerHTML = '<option value="ALL">ทุกประเภทร้าน</option>' + types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  typeSel.value = 'ALL';
+}
+
+function renderAreaDetailTable(){
+  if(!currentDetailArea) return;
+  const area = currentDetailArea;
+  let stores = window.__recruitByStore.filter(x=>x.area===area);
+  const resignCountByStore = new Map();
+  rowsForBreakdown(['area']).forEach(x=>{ resignCountByStore.set(x.store, (resignCountByStore.get(x.store)||0)+1); });
+
+  if(rawAreaFilterVal!=='ALL') stores = stores.filter(x=>x.rawArea===rawAreaFilterVal);
+  const totalResignInArea = stores.reduce((sum,x)=> sum + (resignCountByStore.get(x.storeCode)||0), 0);
+
+  if(areaDetailStatusVal!=='ALL') stores = stores.filter(x=>x.jobStatus===areaDetailStatusVal);
+  if(areaDetailTypeVal!=='ALL') stores = stores.filter(x=>storeTypeOf(x.storeCode)===areaDetailTypeVal);
+  const search = document.getElementById('areaDetailSearch').value.trim().toLowerCase();
+  if(search) stores = stores.filter(x=>
+    (x.storeName||'').toLowerCase().includes(search) || (x.storeCode||'').toLowerCase().includes(search)
+  );
+  const storesSorted = [...stores].sort((a,b)=>
+    (resignCountByStore.get(b.storeCode)||0) - (resignCountByStore.get(a.storeCode)||0)
+  );
+  const titleSuffix = rawAreaFilterVal!=='ALL' ? ` — พื้นที่ "${rawAreaFilterVal}"` : '';
+  document.getElementById('areaDetailTitle').textContent = `ร้านทั้งหมดในพื้นที่ "${area}"${titleSuffix} (${storesSorted.length.toLocaleString()} ร้าน — ลาออกรวม ${totalResignInArea.toLocaleString()} คน)`;
+  document.getElementById('areaDetailCount').textContent = `แสดง ${storesSorted.length.toLocaleString()} ร้าน`;
+  document.getElementById('areaDetailBody').innerHTML = storesSorted.map(x=>{
+    const n = resignCountByStore.get(x.storeCode)||0;
+    return `
+    <tr>
+      <td>${x.storeCode}</td>
+      <td>${x.storeName||'-'}</td>
+      <td>${x.area||'-'}</td>
+      <td>${x.rawArea||'-'}</td>
+      <td>${beerTypeOf(x.storeCode)}</td>
+      <td>${storeTypeOf(x.storeCode)}</td>
+      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
+      <td>${n > 0 ? `<span class="badge no">${n}</span>` : '<span style="color:var(--ink-soft);">0</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectTypeFilter(type){
+  typeFilterVal = type;
+  document.getElementById('typeFilter').value = type;
+  currentDetailType = type;
+  document.getElementById('typeDetailSearch').value = '';
+  renderReport2();
+  renderBreakdowns();
+  updateDetailPanels();
+  scrollToVisibleDetailPanel();
+}
+
+function clearTypeFilter(){
+  typeFilterVal = 'ALL';
+  currentDetailType = null;
+  document.getElementById('typeFilter').value = 'ALL';
+  renderReport2();
+  renderBreakdowns();
+  updateDetailPanels();
+}
+
+let currentDetailType = null;
+
+function renderTypeDetailTable(){
+  if(!currentDetailType) return;
+  const type = currentDetailType;
+  const storeInfoByCode = new Map(window.__recruitByStore.map(x=>[x.storeCode, x]));
+  const rows = rowsForBreakdown(['type']).filter(x=>x.storeType===type);
+  const byStore = new Map();
+  rows.forEach(x=>{
+    const key = x.store;
+    if(!byStore.has(key)){
+      const info = storeInfoByCode.get(key) || {};
+      byStore.set(key, {
+        storeName: x.storeName || info.storeName || '-',
+        area: x.area || info.area || '-',
+        jobStatus: info.jobStatus || '-',
+        hadBE: info.hadBE || false,
+        count: 0
+      });
+    }
+    byStore.get(key).count++;
+  });
+  let list = [...byStore.entries()].map(([code,v])=>({code, ...v}));
+  const search = document.getElementById('typeDetailSearch').value.trim().toLowerCase();
+  if(search) list = list.filter(x=>
+    (x.storeName||'').toLowerCase().includes(search) ||
+    (x.code||'').toLowerCase().includes(search) ||
+    (x.area||'').toLowerCase().includes(search)
+  );
+  list.sort((a,b)=>b.count-a.count);
+  document.getElementById('typeDetailTitle').textContent = `ร้านที่ลาออกในประเภท "${type}" (${byStore.size.toLocaleString()} ร้าน — ลาออกรวม ${rows.length.toLocaleString()} คน)`;
+  document.getElementById('typeDetailCount').textContent = `แสดง ${list.length.toLocaleString()} ร้าน`;
+  document.getElementById('typeDetailBody').innerHTML = list.map(x=>`
+    <tr>
+      <td>${x.code}</td>
+      <td>${x.storeName}</td>
+      <td>${x.area}</td>
+      <td><span class="badge status">${x.jobStatus}</span></td>
+      <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
+      <td><span class="badge no">${x.count}</span></td>
+    </tr>`).join('');
+}
+
+function updateDetailPanels(){
+  const areaOn = areaFilterVal !== 'ALL';
+  const typeOn = typeFilterVal !== 'ALL';
+  const areaPanel = document.getElementById('areaDetailPanel');
+  const typePanel = document.getElementById('typeDetailPanel');
+  const combinedPanel = document.getElementById('combinedDetailPanel');
+
+  if(areaOn && typeOn){
+    areaPanel.style.display = 'none';
+    typePanel.style.display = 'none';
+    combinedPanel.style.display = 'block';
+    document.getElementById('combinedDetailSearch').value = '';
+    renderCombinedDetailTable();
+  } else if(areaOn){
+    combinedPanel.style.display = 'none';
+    typePanel.style.display = 'none';
+    areaPanel.style.display = 'block';
+    populateAreaDetailStatusFilter();
+    renderAreaDetailTable();
+  } else if(typeOn){
+    combinedPanel.style.display = 'none';
+    areaPanel.style.display = 'none';
+    typePanel.style.display = 'block';
+    renderTypeDetailTable();
+  } else {
+    areaPanel.style.display = 'none';
+    typePanel.style.display = 'none';
+    combinedPanel.style.display = 'none';
+  }
+  document.getElementById('clearAreaBtn').style.display = areaOn ? 'inline-block' : 'none';
+  document.getElementById('clearTypeBtn').style.display = typeOn ? 'inline-block' : 'none';
+}
+
+function scrollToVisibleDetailPanel(){
+  ['combinedDetailPanel','areaDetailPanel','typeDetailPanel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el.style.display !== 'none') el.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+}
+
+const combinedSortState = { key:null, dir:1 };
+const combinedAccessors = {
+  storeCode: x=>x.storeCode||'',
+  storeName: x=>x.storeName||'',
+  area: x=>x.area||'',
+  rawArea: x=>x.rawArea||'',
+  beerType: x=>beerTypeOf(x.storeCode),
+  jobStatus: x=>x.jobStatus||'',
+  hadBE: x=> x.hadBE ? 1 : 0,
+  resignCount: x=> x.__resignCount||0
+};
+let combinedRawAreaVal = 'ALL';
+let combinedStatusVal = 'ALL';
+let combinedHadBEVal = 'ALL';
+let combinedBeerTypeVal = 'ALL';
+
+function renderCombinedDetailTable(){
+  const area = areaFilterVal, type = typeFilterVal;
+  if(area==='ALL' || type==='ALL') return;
+  let stores = window.__recruitByStore.filter(x=>{
+    if(x.area !== area) return false;
+    const info = storeTypeProvinceMap.get(x.storeCode) || {};
+    return (info.storeType || 'ไม่ระบุประเภท') === type;
+  });
+  const resignCountByStore = new Map();
+  rowsForBreakdown([]).forEach(x=>{ resignCountByStore.set(x.store, (resignCountByStore.get(x.store)||0)+1); });
+  const totalResign = stores.reduce((sum,x)=> sum + (resignCountByStore.get(x.storeCode)||0), 0);
+  stores = stores.map(x=> ({ ...x, __resignCount: resignCountByStore.get(x.storeCode)||0 }));
+
+  populateCombinedFilters(stores);
+
+  let filtered = stores;
+  if(combinedRawAreaVal!=='ALL') filtered = filtered.filter(x=>x.rawArea===combinedRawAreaVal);
+  if(combinedStatusVal!=='ALL') filtered = filtered.filter(x=>x.jobStatus===combinedStatusVal);
+  if(combinedHadBEVal==='YES') filtered = filtered.filter(x=>x.hadBE);
+  if(combinedHadBEVal==='NO') filtered = filtered.filter(x=>!x.hadBE);
+  if(combinedBeerTypeVal!=='ALL') filtered = filtered.filter(x=>beerTypeOf(x.storeCode)===combinedBeerTypeVal);
+  const search = document.getElementById('combinedDetailSearch').value.trim().toLowerCase();
+  if(search) filtered = filtered.filter(x=>
+    (x.storeName||'').toLowerCase().includes(search) || (x.storeCode||'').toLowerCase().includes(search)
+  );
+
+  if(combinedSortState.key){
+    filtered = applySort(filtered, combinedSortState, combinedAccessors);
+  } else {
+    filtered = [...filtered].sort((a,b)=> b.__resignCount - a.__resignCount);
+  }
+
+  document.getElementById('combinedDetailTitle').textContent = `ร้านประเภท "${type}" ในพื้นที่ "${area}" (${stores.length.toLocaleString()} ร้าน — ลาออกรวม ${totalResign.toLocaleString()} คน)`;
+  document.getElementById('combinedDetailCount').textContent = `แสดง ${filtered.length.toLocaleString()} ร้าน`;
+  document.getElementById('combinedDetailBody').innerHTML = filtered.map(x=>{
+    const n = x.__resignCount;
+    return `
+    <tr>
+      <td>${x.storeCode}</td>
+      <td>${x.storeName||'-'}</td>
+      <td>${x.area||'-'}</td>
+      <td>${x.rawArea||'-'}</td>
+      <td>${beerTypeOf(x.storeCode)}</td>
+      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
+      <td>${n > 0 ? `<span class="badge no">${n}</span>` : '<span style="color:var(--ink-soft);">0</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  attachSortableHeaders('combinedDetailHeadRow', combinedSortState, renderCombinedDetailTable);
+}
+
+function populateCombinedFilters(stores){
+  const rawAreaSel = document.getElementById('combinedRawAreaFilter');
+  const rawAreas = [...new Set(stores.map(x=>x.rawArea).filter(Boolean))].sort();
+  rawAreaSel.innerHTML = '<option value="ALL">ทุกพื้นที่</option>' + rawAreas.map(a=>`<option value="${a}">${a}</option>`).join('');
+  rawAreaSel.value = combinedRawAreaVal;
+
+  const statusSel = document.getElementById('combinedStatusFilter');
+  const statuses = [...new Set(stores.map(x=>x.jobStatus).filter(Boolean))].sort();
+  statusSel.innerHTML = '<option value="ALL">ทุกสถานะ</option>' + statuses.map(s=>`<option value="${s}">${s}</option>`).join('');
+  statusSel.value = combinedStatusVal;
+
+  const beerSel = document.getElementById('combinedBeerTypeFilter');
+  const beerTypes = [...new Set(stores.map(x=>beerTypeOf(x.storeCode)))].sort();
+  beerSel.innerHTML = '<option value="ALL">ทุกประเภทเบียร์</option>' + beerTypes.map(b=>`<option value="${b}">${b}</option>`).join('');
+  beerSel.value = combinedBeerTypeVal;
+}
+
+function sortValueCompare(a, b){
+  if(typeof a === 'number' && typeof b === 'number') return a-b;
+  return String(a).localeCompare(String(b), 'th');
+}
+
+function applySort(rows, sortState, accessors){
+  if(!sortState.key) return rows;
+  const acc = accessors[sortState.key];
+  if(!acc) return rows;
+  return [...rows].sort((a,b)=> sortState.dir * sortValueCompare(acc(a), acc(b)));
+}
+
+function attachSortableHeaders(headRowId, sortState, renderFn){
+  const headRow = document.getElementById(headRowId);
+  headRow.querySelectorAll('th[data-sort]').forEach(th=>{
+    th.classList.toggle('sort-active', sortState.key === th.dataset.sort);
+    th.classList.remove('sort-asc','sort-desc');
+    if(sortState.key === th.dataset.sort) th.classList.add(sortState.dir===1 ? 'sort-asc' : 'sort-desc');
+    th.onclick = ()=>{
+      if(sortState.key === th.dataset.sort) sortState.dir *= -1;
+      else { sortState.key = th.dataset.sort; sortState.dir = 1; }
+      renderFn();
+      attachSortableHeaders(headRowId, sortState, renderFn);
+    };
+  });
+}
+
+const report1SortState = { key:null, dir:1 };
+const report1SortAccessors = {
+  area: x=>x.area||'',
+  rawArea: x=>x.rawArea||'',
+  storeCode: x=>x.storeCode||'',
+  storeName: x=>x.storeName||'',
+  beerType: x=>beerTypeOf(x.storeCode),
+  storeType: x=>storeTypeOf(x.storeCode),
+  jobStatus: x=>x.jobStatus||'',
+  recruitGroup: x=>{ const m=(x.recruitGroup||'').match(/^(\d+)\./); return m ? parseInt(m[1],10) : 9999; },
+  hadBE: x=> x.hadBE ? 1 : 0
+};
+
+const report2SortState = { key:null, dir:1 };
+const report2SortAccessors = {
+  emp: x=>x.emp||'',
+  name: x=>x.name||'',
+  storeName: x=>x.storeName||'',
+  area: x=>x.area||'',
+  rawArea: x=>x.rawArea||'',
+  beerType: x=>beerTypeOf(x.store),
+  storeType: x=>x.storeType||'',
+  inStoreList: x=> x.inStoreList ? 1 : 0,
+  lastDate: x=> x.lastDate ? x.lastDate.getTime() : -Infinity,
+  tenureDays: x=> x.tenureDays===null ? -Infinity : x.tenureDays
+};
+
+let statusFilterVal = 'สรรหา';
+let hadBEFilterVal = 'ALL';
+let recruitGroupFilterVal = 'ALL';
+let report1ZoneVal = 'ALL';
+let report1AreaVal = 'ALL';
+let report1BeerTypeVal = 'ALL';
+let report1StoreTypeVal = 'ALL';
+function renderReport1(){
+  const search = document.getElementById('searchStore').value.trim().toLowerCase();
+  let rows = window.__recruit;
+  if(statusFilterVal !== 'ALL') rows = rows.filter(x=>x.jobStatus===statusFilterVal);
+  if(hadBEFilterVal==='YES') rows = rows.filter(x=>x.hadBE);
+  if(hadBEFilterVal==='NO') rows = rows.filter(x=>!x.hadBE);
+  if(recruitGroupFilterVal!=='ALL') rows = rows.filter(x=>x.recruitGroup===recruitGroupFilterVal);
+  if(report1ZoneVal!=='ALL') rows = rows.filter(x=>x.area===report1ZoneVal);
+  if(report1AreaVal!=='ALL') rows = rows.filter(x=>x.rawArea===report1AreaVal);
+  if(report1BeerTypeVal!=='ALL') rows = rows.filter(x=>beerTypeOf(x.storeCode)===report1BeerTypeVal);
+  if(report1StoreTypeVal!=='ALL') rows = rows.filter(x=>storeTypeOf(x.storeCode)===report1StoreTypeVal);
+  if(search) rows = rows.filter(x=>
+    (x.storeName||'').toLowerCase().includes(search) ||
+    (x.storeCode||'').toLowerCase().includes(search)
+  );
+  rows = applySort(rows, report1SortState, report1SortAccessors);
+  document.getElementById('report1Count').textContent = `แสดง ${rows.length.toLocaleString()} รายการ`;
+  document.getElementById('report1Body').innerHTML = rows.map(x=>`
+    <tr>
+      <td>${x.area||'-'}</td>
+      <td>${x.rawArea||'-'}</td>
+      <td>${x.storeCode}</td>
+      <td>${x.storeName||'-'}</td>
+      <td>${beerTypeOf(x.storeCode)}</td>
+      <td>${storeTypeOf(x.storeCode)}</td>
+      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${x.recruitGroup||'-'}</td>
+      <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
+    </tr>`).join('');
+}
+
+function populateReport1Filters(){
+  const zoneSel = document.getElementById('report1ZoneFilter');
+  const zones = [...new Set(window.__recruit.map(x=>x.area).filter(Boolean))].sort();
+  zoneSel.innerHTML = '<option value="ALL">ทุกโซน</option>' + zones.map(z=>`<option value="${z}">${z}</option>`).join('');
+
+  const areaSel = document.getElementById('report1AreaFilter');
+  const areas = [...new Set(window.__recruit.map(x=>x.rawArea).filter(Boolean))].sort();
+  areaSel.innerHTML = '<option value="ALL">ทุกพื้นที่</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  const beerSel = document.getElementById('report1BeerTypeFilter');
+  const beerTypes = [...new Set(window.__recruit.map(x=>beerTypeOf(x.storeCode)))].sort();
+  beerSel.innerHTML = '<option value="ALL">ทุกประเภทเบียร์</option>' + beerTypes.map(b=>`<option value="${b}">${b}</option>`).join('');
+
+  const storeSel = document.getElementById('report1StoreTypeFilter');
+  const storeTypes = [...new Set(window.__recruit.map(x=>storeTypeOf(x.storeCode)))].sort();
+  storeSel.innerHTML = '<option value="ALL">ทุกประเภทร้าน</option>' + storeTypes.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+function populateRecruitGroupFilter(){
+  const sel = document.getElementById('recruitGroupFilter');
+  const groups = [...new Set(window.__recruit.map(x=>x.recruitGroup).filter(Boolean))];
+  groups.sort((a,b)=>{
+    const na = parseInt((a.match(/^(\d+)\./)||[])[1], 10);
+    const nb = parseInt((b.match(/^(\d+)\./)||[])[1], 10);
+    if(!isNaN(na) && !isNaN(nb)) return na-nb;
+    return a.localeCompare(b);
+  });
+  sel.innerHTML = '<option value="ALL">ทุกระยะเวลาที่ว่าง</option>' + groups.map(g=>`<option value="${g}">${g}</option>`).join('');
+}
+
+function sortRecruitGroups(groups){
+  return [...groups].sort((a,b)=>{
+    const na = parseInt((a.match(/^(\d+)\./)||[])[1], 10);
+    const nb = parseInt((b.match(/^(\d+)\./)||[])[1], 10);
+    if(!isNaN(na) && !isNaN(nb)) return na-nb;
+    return a.localeCompare(b);
+  });
+}
+
+let vacancyChartInstance = null;
+function renderVacancyChart(){
+  if(typeof Chart === 'undefined') return;
+  const rows = window.__recruit.filter(x=>x.jobStatus==='สรรหา' && x.recruitGroup);
+  const groups = sortRecruitGroups([...new Set(rows.map(x=>x.recruitGroup))]);
+  const hadBECounts = groups.map(g=> rows.filter(x=>x.recruitGroup===g && x.hadBE).length);
+  const neverBECounts = groups.map(g=> rows.filter(x=>x.recruitGroup===g && !x.hadBE).length);
+
+  const ctx = document.getElementById('vacancyChart').getContext('2d');
+  if(vacancyChartInstance) vacancyChartInstance.destroy();
+  vacancyChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: groups,
+      datasets: [
+        { label: 'เคยมี BE', data: hadBECounts, backgroundColor: '#0E6E5B', stack: 's1' },
+        { label: 'ไม่เคยมี BE', data: neverBECounts, backgroundColor: '#B5432C', stack: 's1' }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:12, font:{ size:12 } } },
+        datalabels:{ color:'#fff', font:{ weight:'bold', size:11 }, formatter:(v)=> v>0 ? v : '' }
+      },
+      scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true, ticks:{ precision:0 } } }
+    }
+  });
+}
+
+let areaFilterVal = 'ALL';
+let typeFilterVal = 'ALL';
+let rawAreaFilterVal = 'ALL';
+let monthFilterVal = 'ALL';
+let tenureFilterVal = 'ALL';
+function renderReport2(){
+  let rows = rowsForBreakdown([]);
+  if(report2SortState.key){
+    rows = applySort(rows, report2SortState, report2SortAccessors);
+  } else {
+    rows = rows.slice().sort((a,b)=>{
+      if(a.tenureDays===null && b.tenureDays===null) return 0;
+      if(a.tenureDays===null) return 1;
+      if(b.tenureDays===null) return -1;
+      return b.tenureDays - a.tenureDays;
+    });
+  }
+  document.getElementById('report2Count').textContent = `แสดง ${rows.length.toLocaleString()} คน`;
+  document.getElementById('report2Body').innerHTML = rows.map(x=>`
+    <tr>
+      <td>${x.emp}</td>
+      <td>${x.name||'-'}</td>
+      <td>${x.storeName||'-'}</td>
+      <td>${x.area||'-'}</td>
+      <td>${x.rawArea||'-'}</td>
+      <td>${beerTypeOf(x.store)}</td>
+      <td>${x.storeType||'-'}</td>
+      <td>${x.inStoreList ? '<span class="badge yes">ใน 300 ร้าน</span>' : '<span class="badge no">นอกเหนือ</span>'}</td>
+      <td>${fmtDate(x.lastDate)}</td>
+      <td>${x.tenureDays!==null ? x.tenureDays.toLocaleString() : '-'}</td>
+    </tr>`).join('');
+}
+
+const MONTH_NAMES_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function populateFilters(){
+  const rows = getScopedResigned();
+  const areaSel = document.getElementById('areaFilter');
+  const areas = [...new Set(rows.map(x=>x.area).filter(Boolean))].sort();
+  areaSel.innerHTML = '<option value="ALL">ทุกโซน</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  const rawAreaSel = document.getElementById('rawAreaFilterR2');
+  const rawAreas = [...new Set(rows.map(x=>x.rawArea).filter(Boolean))].sort();
+  rawAreaSel.innerHTML = '<option value="ALL">ทุกพื้นที่</option>' + rawAreas.map(a=>`<option value="${a}">${a}</option>`).join('');
+
+  const typeSel = document.getElementById('typeFilter');
+  const types = [...new Set(rows.map(x=>x.storeType).filter(Boolean))].sort();
+  typeSel.innerHTML = '<option value="ALL">ทุกประเภทร้าน</option>' + types.map(t=>`<option value="${t}">${t}</option>`).join('');
+
+  const monthSel = document.getElementById('monthFilterR2');
+  const months = [...new Set(rows.map(x=> x.lastDate ? x.lastDate.getMonth()+1 : null).filter(Boolean))].sort((a,b)=>a-b);
+  monthSel.innerHTML = '<option value="ALL">ทุกเดือน</option>' + months.map(m=>`<option value="${m}">${MONTH_NAMES_TH[m-1]}</option>`).join('');
+
+  const tenureSel = document.getElementById('tenureFilterR2');
+  const tenures = TENURE_ORDER.filter(k=> rows.some(x=>tenureBucket(x.tenureDays)===k));
+  tenureSel.innerHTML = '<option value="ALL">ทุกช่วงอายุงาน</option>' + tenures.map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+
+const MONTH_LABELS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+const zoneSortState = { key:'total', dir:-1 };
+
+function renderZoneMonthlyChart(){
+  const rows = getScopedResigned();
+
+  const zoneStoreCounts = new Map();
+  window.__recruitByStore.forEach(x=>{
+    const zone = x.area || 'ไม่ระบุโซน';
+    zoneStoreCounts.set(zone, (zoneStoreCounts.get(zone)||0)+1);
+  });
+
+  const zoneMonthCounts = new Map();
+  const zoneTotals = new Map();
+  const zoneAreaRows = new Map();
+  rows.forEach(x=>{
+    const zone = x.area || 'ไม่ระบุโซน';
+    if(!zoneMonthCounts.has(zone)) zoneMonthCounts.set(zone, new Array(12).fill(0));
+    if(x.lastDate) zoneMonthCounts.get(zone)[x.lastDate.getMonth()]++;
+    zoneTotals.set(zone, (zoneTotals.get(zone)||0)+1);
+    if(!zoneAreaRows.has(zone)) zoneAreaRows.set(zone, []);
+    zoneAreaRows.get(zone).push(x);
+  });
+  window.__zoneAreaRows = zoneAreaRows;
+
+  let zoneSummaries = [...zoneTotals.keys()].map(zone=>{
+    const storeCount = zoneStoreCounts.get(zone) || 0;
+    const total = zoneTotals.get(zone) || 0;
+    const pct = storeCount > 0 ? (total/storeCount*100) : -1;
+    return { zone, total, storeCount, pct };
+  });
+  const zoneAccessors = { zone:x=>x.zone||'', total:x=>x.total, storeCount:x=>x.storeCount, pct:x=>x.pct };
+  zoneSummaries = applySort(zoneSummaries, zoneSortState, zoneAccessors);
+  const zones = zoneSummaries.map(z=>z.zone);
+  const maxMonthCount = Math.max(1, ...zones.flatMap(z=> zoneMonthCounts.get(z)||[]));
+
+  const headRow = document.getElementById('zoneMonthHeadRow');
+  headRow.innerHTML = '<th data-sort="zone">โซน</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th><th data-sort="storeCount">total ร้าน</th><th data-sort="pct">% turnover</th>';
+  attachSortableHeaders('zoneMonthHeadRow', zoneSortState, renderZoneMonthlyChart);
+
+  document.getElementById('zoneMonthBody').innerHTML = zoneSummaries.map(({zone,total,storeCount,pct})=>{
+    const counts = zoneMonthCounts.get(zone) || new Array(12).fill(0);
+    const isSelected = areaFilterVal === zone;
+    return `<tr>
+      <td class="zone-clickable" data-zone="${(zone||'').replace(/"/g,'&quot;')}" style="cursor:pointer;color:${isSelected?'var(--amber)':'var(--teal-dark)'};font-weight:600;text-decoration:underline;">${zone||'-'}${isSelected?' ✓':''}</td>
+      ${counts.map(c=>{
+        const intensity = c/maxMonthCount;
+        const bg = c>0 ? `rgba(201,121,12,${0.12 + intensity*0.55})` : 'transparent';
+        return `<td style="background:${bg};">${c>0?c:''}</td>`;
+      }).join('')}
+      <td style="font-weight:600;">${total.toLocaleString()}</td>
+      <td>${storeCount.toLocaleString()}</td>
+      <td>${pct>=0 ? pct.toFixed(1)+'%' : '-'}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('.zone-clickable').forEach(cell=>{
+    cell.addEventListener('click', ()=> toggleZoneFilter(cell.dataset.zone));
+  });
+}
+
+function toggleZoneFilter(zone){
+  if(areaFilterVal === zone) clearAreaFilter();
+  else selectAreaFilter(zone);
+}
+
+const areaSortState = { key:'total', dir:-1 };
+
+function renderAreaMonthlyChart(){
+  const panel = document.getElementById('areaMonthPanel');
+  if(areaFilterVal === 'ALL'){
+    panel.style.display = 'none';
     return;
   }
-  positions.forEach(p=>{
-    const pct = stats.total>0 ? Math.round(stats.byPos[p]/stats.total*1000)/10 : 0;
-    const div = document.createElement('div');
-    div.className = 'kpi';
-    div.innerHTML = `<div class="v num">${stats.byPos[p]}</div><div class="l">${p}</div>`;
-    row.appendChild(div);
+  panel.style.display = 'block';
+  document.getElementById('areaMonthTitle').textContent = `การลาออกแยกพื้นที่ ในโซน "${areaFilterVal}" ตามเดือน + อัตราลาออกต่อร้าน`;
+
+  const rows = getScopedResigned().filter(x=>x.area === areaFilterVal);
+
+  const areaStoreCounts = new Map();
+  window.__recruitByStore.filter(x=>x.area === areaFilterVal).forEach(x=>{
+    const area = x.rawArea || 'ไม่ระบุพื้นที่';
+    areaStoreCounts.set(area, (areaStoreCounts.get(area)||0)+1);
   });
-  const totalDiv = document.createElement('div');
-  totalDiv.className = 'kpi kpi-total-card';
-  totalDiv.innerHTML = `<div class="v num">${stats.total}</div><div class="l">รวมยอดสรรหา (รายวัน)</div>`;
-  row.appendChild(totalDiv);
-}
-let r_dateFrom = '', r_dateTo = '';
-function renderPositionSection(){
-  const stats = computePositionStats(r_dateFrom, r_dateTo);
-  renderPositionCards(stats);
-}
-function initReport(){
-  const teams = allTeamsFlat().filter(t=>t.is_active!==false); // report counts active teams only
-  const below6 = teams.filter(t=>t.grand_total < 6);
-  const below8 = teams.filter(t=>t.grand_total < 8);
-  const noRider = teams.filter(t=>(t.rider + t.p_rider + t.t_rider) === 0);
 
-  document.getElementById('r_kpiBelow6').textContent = below6.length;
-  document.getElementById('r_kpiBelow8').textContent = below8.length;
-  document.getElementById('r_kpiNoRider').textContent = noRider.length;
+  const areaMonthCounts = new Map();
+  const areaTotals = new Map();
+  rows.forEach(x=>{
+    const area = x.rawArea || 'ไม่ระบุพื้นที่';
+    if(!areaMonthCounts.has(area)) areaMonthCounts.set(area, new Array(12).fill(0));
+    if(x.lastDate) areaMonthCounts.get(area)[x.lastDate.getMonth()]++;
+    areaTotals.set(area, (areaTotals.get(area)||0)+1);
+  });
 
-  document.getElementById('r_table_below6').innerHTML = teamListTable(below6, true);
-  document.getElementById('r_table_below8').innerHTML = teamListTable(below8, true);
-  document.getElementById('r_table_norider').innerHTML = riderTable(noRider);
+  let areaSummaries = [...areaTotals.keys()].map(area=>{
+    const storeCount = areaStoreCounts.get(area) || 0;
+    const total = areaTotals.get(area) || 0;
+    const pct = storeCount > 0 ? (total/storeCount*100) : -1;
+    return { area, total, storeCount, pct };
+  });
+  const areaAccessors = { area:x=>x.area||'', total:x=>x.total, storeCount:x=>x.storeCount, pct:x=>x.pct };
+  areaSummaries = applySort(areaSummaries, areaSortState, areaAccessors);
+  const areasList = areaSummaries.map(a=>a.area);
+  const maxMonthCount = Math.max(1, ...areasList.flatMap(a=> areaMonthCounts.get(a)||[]));
 
-  const dfEl = document.getElementById('r_dateFrom');
-  const dtEl = document.getElementById('r_dateTo');
-  dfEl.min = P2.date_range.min; dfEl.max = P2.date_range.max;
-  dtEl.min = P2.date_range.min; dtEl.max = P2.date_range.max;
-  dfEl.value = r_dateFrom; dtEl.value = r_dateTo;
-  renderPositionSection();
+  const headRow = document.getElementById('areaMonthHeadRow');
+  headRow.innerHTML = '<th data-sort="area">พื้นที่</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th><th data-sort="storeCount">total ร้าน</th><th data-sort="pct">% turnover</th>';
+  attachSortableHeaders('areaMonthHeadRow', areaSortState, renderAreaMonthlyChart);
+
+  document.getElementById('areaMonthBody').innerHTML = areaSummaries.map(({area,total,storeCount,pct})=>{
+    const counts = areaMonthCounts.get(area) || new Array(12).fill(0);
+    const isSelected = rawAreaFilterVal === area;
+    return `<tr>
+      <td class="rawarea-clickable" data-area="${(area||'').replace(/"/g,'&quot;')}" style="cursor:pointer;color:${isSelected?'var(--amber)':'var(--teal-dark)'};font-weight:600;text-decoration:underline;">${area||'-'}${isSelected?' ✓':''}</td>
+      ${counts.map(c=>{
+        const intensity = c/maxMonthCount;
+        const bg = c>0 ? `rgba(201,121,12,${0.12 + intensity*0.55})` : 'transparent';
+        return `<td style="background:${bg};">${c>0?c:''}</td>`;
+      }).join('')}
+      <td style="font-weight:600;">${total.toLocaleString()}</td>
+      <td>${storeCount.toLocaleString()}</td>
+      <td>${pct>=0 ? pct.toFixed(1)+'%' : '-'}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelectorAll('.rawarea-clickable').forEach(cell=>{
+    cell.addEventListener('click', ()=> selectRawAreaFilter(cell.dataset.area));
+  });
+
+  document.getElementById('rawAreaClearWrap').style.display = rawAreaFilterVal!=='ALL' ? 'inline' : 'none';
 }
-document.getElementById('r_dateFrom').addEventListener('change', (e)=>{ r_dateFrom=e.target.value; renderPositionSection(); });
-document.getElementById('r_dateTo').addEventListener('change', (e)=>{ r_dateTo=e.target.value; renderPositionSection(); });
-document.getElementById('r_dateResetBtn').addEventListener('click', ()=>{
-  r_dateFrom=''; r_dateTo='';
-  document.getElementById('r_dateFrom').value='';
-  document.getElementById('r_dateTo').value='';
-  renderPositionSection();
+
+const storeSortState = { key:'total', dir:-1 };
+
+function renderStoreMonthlyChart(){
+  const panel = document.getElementById('storeMonthPanel');
+  if(areaFilterVal === 'ALL'){
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = 'block';
+  const titleSuffix = rawAreaFilterVal!=='ALL' ? ` — พื้นที่ "${rawAreaFilterVal}"` : ` — โซน "${areaFilterVal}"`;
+  document.getElementById('storeMonthTitle').textContent = `การลาออกแยกร้าน ตามเดือน${titleSuffix}`;
+
+  const rows = rowsForBreakdown([]);
+
+  const storeMonthCounts = new Map();
+  const storeTotals = new Map();
+  const storeNames = new Map();
+  rows.forEach(x=>{
+    const code = x.store || 'ไม่ทราบรหัส';
+    if(!storeMonthCounts.has(code)) storeMonthCounts.set(code, new Array(12).fill(0));
+    if(x.lastDate) storeMonthCounts.get(code)[x.lastDate.getMonth()]++;
+    storeTotals.set(code, (storeTotals.get(code)||0)+1);
+    if(!storeNames.has(code)) storeNames.set(code, x.storeName || '-');
+  });
+
+  let storeSummaries = [...storeTotals.keys()].map(code=>({
+    code, name: storeNames.get(code) || '-', total: storeTotals.get(code) || 0
+  }));
+  const storeAccessors = { code:x=>x.code||'', name:x=>x.name||'', total:x=>x.total };
+  storeSummaries = applySort(storeSummaries, storeSortState, storeAccessors);
+  const maxMonthCount = Math.max(1, ...storeSummaries.flatMap(s=> storeMonthCounts.get(s.code)||[]));
+
+  const headRow = document.getElementById('storeMonthHeadRow');
+  headRow.innerHTML = '<th data-sort="code">รหัสร้าน</th><th data-sort="name">ชื่อร้าน</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th>';
+  attachSortableHeaders('storeMonthHeadRow', storeSortState, renderStoreMonthlyChart);
+
+  document.getElementById('storeMonthBody').innerHTML = storeSummaries.map(({code,name,total})=>{
+    const counts = storeMonthCounts.get(code) || new Array(12).fill(0);
+    return `<tr>
+      <td>${code}</td>
+      <td>${name}</td>
+      ${counts.map(c=>{
+        const intensity = c/maxMonthCount;
+        const bg = c>0 ? `rgba(201,121,12,${0.12 + intensity*0.55})` : 'transparent';
+        return `<td style="background:${bg};">${c>0?c:''}</td>`;
+      }).join('')}
+      <td style="font-weight:600;">${total.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectRawAreaFilter(area){
+  rawAreaFilterVal = (rawAreaFilterVal === area) ? 'ALL' : area;
+  document.getElementById('rawAreaFilterR2').value = rawAreaFilterVal;
+  refreshPage2();
+}
+
+function clearRawAreaFilter(){
+  rawAreaFilterVal = 'ALL';
+  document.getElementById('rawAreaFilterR2').value = 'ALL';
+  refreshPage2();
+}
+
+function refreshPage2(){
+  renderPage2KPIs();
+  renderBreakdowns();
+  renderReport2();
+  renderZoneMonthlyChart();
+  renderAreaMonthlyChart();
+  renderStoreMonthlyChart();
+  renderAreaDetailTable();
+  populateFilters();
+}
+
+document.getElementById('statusFilterSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#statusFilterSeg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); statusFilterVal = btn.dataset.val; renderReport1();
 });
+document.getElementById('hadBEFilterSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#hadBEFilterSeg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); hadBEFilterVal = btn.dataset.val; renderReport1();
+});
+document.getElementById('scopeFilterSeg').addEventListener('click', e=>{
+  const btn = e.target.closest('button'); if(!btn) return;
+  document.querySelectorAll('#scopeFilterSeg button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); scopeFilterVal = btn.dataset.val;
+  areaFilterVal = 'ALL'; typeFilterVal = 'ALL'; rawAreaFilterVal = 'ALL'; monthFilterVal = 'ALL'; tenureFilterVal = 'ALL';
+  currentDetailArea = null; currentDetailType = null;
+  document.getElementById('areaFilter').value = 'ALL';
+  document.getElementById('typeFilter').value = 'ALL';
+  document.getElementById('rawAreaFilterR2').value = 'ALL';
+  document.getElementById('monthFilterR2').value = 'ALL';
+  document.getElementById('tenureFilterR2').value = 'ALL';
+  updateDetailPanels();
+  refreshPage2();
+});
+document.getElementById('searchStore').addEventListener('input', renderReport1);
+document.getElementById('recruitGroupFilter').addEventListener('change', e=>{ recruitGroupFilterVal = e.target.value; renderReport1(); });
+document.getElementById('report1ZoneFilter').addEventListener('change', e=>{ report1ZoneVal = e.target.value; renderReport1(); });
+document.getElementById('report1AreaFilter').addEventListener('change', e=>{ report1AreaVal = e.target.value; renderReport1(); });
+document.getElementById('report1BeerTypeFilter').addEventListener('change', e=>{ report1BeerTypeVal = e.target.value; renderReport1(); });
+document.getElementById('report1StoreTypeFilter').addEventListener('change', e=>{ report1StoreTypeVal = e.target.value; renderReport1(); });
+document.getElementById('searchEmp').addEventListener('input', ()=>{ renderReport2(); renderBreakdowns(); });
+document.getElementById('areaFilter').addEventListener('change', e=>{
+  const val = e.target.value;
+  if(val==='ALL') clearAreaFilter(); else selectAreaFilter(val);
+});
+document.getElementById('clearAreaBtn').addEventListener('click', clearAreaFilter);
+document.getElementById('typeFilter').addEventListener('change', e=>{
+  const val = e.target.value;
+  if(val==='ALL') clearTypeFilter(); else selectTypeFilter(val);
+});
+document.getElementById('clearTypeBtn').addEventListener('click', clearTypeFilter);
+document.getElementById('rawAreaFilterR2').addEventListener('change', e=>{
+  rawAreaFilterVal = e.target.value; refreshPage2();
+});
+document.getElementById('clearRawAreaBtn').addEventListener('click', clearRawAreaFilter);
+document.getElementById('monthFilterR2').addEventListener('change', e=>{
+  monthFilterVal = e.target.value; refreshPage2();
+});
+document.getElementById('tenureFilterR2').addEventListener('change', e=>{
+  tenureFilterVal = e.target.value; refreshPage2();
+});
+document.getElementById('areaDetailStatusFilter').addEventListener('change', e=>{
+  areaDetailStatusVal = e.target.value; renderAreaDetailTable();
+});
+document.getElementById('areaDetailTypeFilter').addEventListener('change', e=>{
+  areaDetailTypeVal = e.target.value; renderAreaDetailTable();
+});
+document.getElementById('areaDetailSearch').addEventListener('input', renderAreaDetailTable);
+document.getElementById('typeDetailSearch').addEventListener('input', renderTypeDetailTable);
+document.getElementById('combinedDetailSearch').addEventListener('input', renderCombinedDetailTable);
+document.getElementById('combinedRawAreaFilter').addEventListener('change', e=>{ combinedRawAreaVal = e.target.value; renderCombinedDetailTable(); });
+document.getElementById('combinedStatusFilter').addEventListener('change', e=>{ combinedStatusVal = e.target.value; renderCombinedDetailTable(); });
+document.getElementById('combinedHadBEFilter').addEventListener('change', e=>{ combinedHadBEVal = e.target.value; renderCombinedDetailTable(); });
+document.getElementById('combinedBeerTypeFilter').addEventListener('change', e=>{ combinedBeerTypeVal = e.target.value; renderCombinedDetailTable(); });
 
-/* ============ BOOTSTRAP: fetch live data from /api/data ============ */
-function formatThaiDateShort(iso){
-  if(!iso) return '-';
-  const d = new Date(iso+'T00:00:00');
-  return d.toLocaleDateString('th-TH', {year:'numeric', month:'short', day:'numeric'});
-}
-function populateFooterStats(){
-  document.getElementById('ftPlaced').textContent = FUNNEL.placed_total_all;
-  document.getElementById('ftDropped').textContent = FUNNEL.dropped_total_all;
-  document.getElementById('ftNoshow').textContent = FUNNEL.no_show;
-  document.getElementById('ftDateMin').textContent = formatThaiDateShort(P2.date_range.min);
-  document.getElementById('ftDateMax').textContent = formatThaiDateShort(P2.date_range.max);
-}
-function resetDailyAndReportState(){
-  dailyInited = false;
-  reportInited = false;
-  document.getElementById('dailyContent').innerHTML = '';
-  document.querySelectorAll('.report-table').forEach(t=>{ t.innerHTML=''; });
-  const activePage = document.querySelector('.page.active');
-  if(activePage && activePage.id==='page-daily'){ initDaily(); dailyInited = true; }
-  if(activePage && activePage.id==='page-report'){ initReport(); reportInited = true; }
-}
-async function fetchData(){
-  const res = await fetch('/api/data', { cache: 'no-store' });
-  const json = await res.json();
-  if(!res.ok || json.error){
-    throw new Error(json.message || `โหลดข้อมูลไม่สำเร็จ (HTTP ${res.status})`);
-  }
-  return json;
-}
-async function bootstrap(isRefresh){
-  const loadingEl = document.getElementById('loadingScreen');
-  const errorEl = document.getElementById('errorScreen');
-  const appEl = document.getElementById('appRoot');
-  const refreshBtn = document.getElementById('refreshBtn');
-  errorEl.classList.remove('show');
-  if(isRefresh){ refreshBtn.disabled = true; refreshBtn.textContent = '⟳ กำลังโหลด...'; }
-  else { loadingEl.style.display = 'flex'; appEl.classList.remove('show'); }
 
+async function loadAll(){
+  refreshBtn.disabled = true;
+  statusDot.className = 'dot';
+  statusText.textContent = 'กำลังซิงค์ข้อมูล...';
+  loadingBox.style.display = 'block';
+  errorBox.style.display = 'none';
+  content.style.display = 'none';
   try{
-    const json = await fetchData();
-    FULL = json;
-    P1 = FULL.page1;
-    P2 = FULL.page2;
-    DATA = P1.regions;
-    NEW_ZONES = P1.new_zones;
-    FUNNEL = P1.funnel;
-
-    populateFooterStats();
-    const genDate = new Date(FULL.generated_at);
-    document.getElementById('lastUpdated').textContent = '· อัปเดตล่าสุด ' + genDate.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('asof') && (document.getElementById('asof').textContent = '');
-
-    await initManpower();
-    if(isRefresh) resetDailyAndReportState();
-
-    loadingEl.style.display = 'none';
-    appEl.classList.add('show');
+    const [beAllRows, recruitRows] = await Promise.all([fetchGviz(GID_BE_ALL), fetchGviz(GID_RECRUIT)]);
+    processData(beAllRows, recruitRows);
+    loadingBox.style.display = 'none';
+    content.style.display = 'block';
+    statusDot.className = 'dot live';
+    const now = new Date();
+    statusText.textContent = 'เชื่อมต่อสำเร็จ';
+    syncFoot.textContent = `ซิงค์ข้อมูลล่าสุด: ${now.toLocaleString('th-TH')} — ข้อมูลดึงสดจาก Google Sheets ทุกครั้งที่เปิดหรือกดรีเฟรช`;
   }catch(err){
-    console.error('Data load failed:', err);
-    loadingEl.style.display = 'none';
-    document.getElementById('errorMessage').textContent = err.message || 'ไม่สามารถเชื่อมต่อข้อมูลได้ กรุณาลองใหม่';
-    errorEl.classList.add('show');
-  }finally{
-    if(isRefresh){ refreshBtn.disabled = false; refreshBtn.textContent = '⟳ รีเฟรชข้อมูล'; }
+    loadingBox.style.display = 'none';
+    errorBox.style.display = 'block';
+    errorBox.textContent = 'ดึงข้อมูลไม่สำเร็จ: ' + err.message + '\nตรวจสอบว่าชีตแชร์เป็น "Anyone with the link can view" อยู่ แล้วลองกดรีเฟรชอีกครั้ง';
+    statusDot.className = 'dot err';
+    statusText.textContent = 'เชื่อมต่อไม่สำเร็จ';
   }
+  refreshBtn.disabled = false;
 }
-document.getElementById('retryBtn').addEventListener('click', ()=>bootstrap(false));
-document.getElementById('refreshBtn').addEventListener('click', ()=>bootstrap(true));
-bootstrap(false);
+refreshBtn.addEventListener('click', loadAll);
+loadAll();
 </script>
 </body>
 </html>
