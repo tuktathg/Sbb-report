@@ -443,6 +443,25 @@ function parseDMY(s){
   const dt = new Date(y, m-1, d);
   return isNaN(dt.getTime()) ? null : dt;
 }
+function parseFlexibleDate(s, swapDayMonth){
+  if(!s) return null;
+  const p = String(s).trim().split('/');
+  if(p.length!==3) return null;
+  let d=parseInt(p[0],10), m=parseInt(p[1],10);
+  const y=parseInt(p[2],10);
+  if(swapDayMonth){ const t=d; d=m; m=t; }
+  if(!d||!m||!y || m<1||m>12||d<1||d>31) return null;
+  const dt = new Date(y, m-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function parseHRStartDate(abStr, aaStr){
+  const aaDate = parseDMY(aaStr);
+  const normal = parseFlexibleDate(abStr, false);
+  const swapped = parseFlexibleDate(abStr, true);
+  if(aaDate && normal && normal.getMonth() === aaDate.getMonth()) return normal;
+  if(aaDate && swapped && swapped.getMonth() === aaDate.getMonth()) return swapped;
+  return normal || swapped;
+}
 function fmtDate(dt){
   if(!dt) return '-';
   const dd = String(dt.getDate()).padStart(2,'0');
@@ -614,7 +633,7 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw){
   hrRows.forEach(r=>{
     if(!r) return;
     const storeCode = (r[8]||'').trim();
-    const startDate = parseDMY(r[27]);
+    const startDate = parseHRStartDate(r[27], r[26]);
     if(!storeCode || !startDate) return;
     if(!hrStartDateMap.has(storeCode)) hrStartDateMap.set(storeCode, []);
     hrStartDateMap.get(storeCode).push(startDate);
