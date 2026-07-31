@@ -373,7 +373,7 @@
       <div class="panel">
         <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <p class="desc">
-          วันที่ตำแหน่งว่าง: ใช้วันที่ล่าสุดในคอลัมน์ J ของชีต "master_BE" เฉพาะแถวที่สถานะ (คอลัมน์ C) เป็น "ลาออก" ของร้านนั้น — ถ้าไม่มีแถวที่แมช หรือวันที่ที่ได้เป็นปี 2025 (ข้อมูลเก่า) จะใช้คอลัมน์ AZ จากชีต "ร้านที่ต้องสรรหา" แทน
+          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AZ จากชีต "ร้านที่ต้องสรรหา" เป็นหลัก — แต่ถ้ามีวันที่ในคอลัมน์ J ของชีต "master_BE" (เฉพาะแถวสถานะ "ลาออก" ในคอลัมน์ C ของร้านนั้น) ที่ใหม่กว่า จะใช้วันที่จาก master_BE แทน
           วันเริ่มงาน: ใช้แถวแรกที่สถานะเป็น "ทำงานอยู่" ของร้านนั้นในชีต "master_BE" ดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) — ถ้ายังไม่มีคนเริ่มงาน จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
           แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ
         </p>
@@ -711,9 +711,9 @@ function renderFillTimeReport(){
   byStore.forEach((recruitRows, storeCode)=>{
     if(!recruitStoreCodeSet.has(storeCode)) return;
     const azDate = recruitRows.map(x=>x.azDate).find(d=>d) || null;
-    let vacancyDate = masterBEResignDateMap.get(storeCode) || null;
-    if(vacancyDate && vacancyDate.getFullYear() === 2025) vacancyDate = azDate || vacancyDate;
-    if(!vacancyDate) vacancyDate = azDate;
+    const masterDate = masterBEResignDateMap.get(storeCode) || null;
+    let vacancyDate = azDate;
+    if(masterDate && (!vacancyDate || masterDate > vacancyDate)) vacancyDate = masterDate;
     if(!vacancyDate) return;
     const startDate = masterBEStartDateMap.get(storeCode) || null;
     recruitRows.forEach(x=>{
