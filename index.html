@@ -370,9 +370,9 @@
       <div class="panel">
         <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <p class="desc">
-          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AZ จากชีต "ร้านที่ต้องสรรหา" เป็นหลัก — แต่ถ้ามีวันที่ในคอลัมน์ J ของชีต "master_BE" (เฉพาะแถวสถานะ "ลาออก" ในคอลัมน์ C ของร้านนั้น) ที่ใหม่กว่า จะใช้วันที่จาก master_BE แทน
-          วันเริ่มงาน: ใช้แถวแรกที่สถานะเป็น "ทำงานอยู่" ของร้านนั้นในชีต "master_BE" ดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) — ถ้ายังไม่มีคนเริ่มงาน จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
-          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ โดยแจกวันเริ่มงานที่เจอใน master_BE ให้ทีละแถวตามลำดับ (ถ้ามีคนทำงานอยู่แค่ 1 คน แถวแรกจะได้วันเริ่มงาน ส่วนแถวที่เหลือยังนับถึงวันปัจจุบันต่อ)
+          วันที่ตำแหน่งว่าง: ใช้คอลัมน์ BB จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
+          วันเริ่มงาน: ใช้คอลัมน์ BA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่าง จะแสดง "-" และนับระยะเวลาว่างถึงวันปัจจุบันแทน
+          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการตามข้อมูล BA/BB ของแต่ละแถว
         </p>
         <div class="controls">
           <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
@@ -649,13 +649,13 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
     if(!r) return null;
     const area=(r[50]||'').trim(), rawArea=(r[0]||'').trim(), storeCode=(r[1]||'').replace(/\s+/g,'').trim(), storeName=r[2]||'',
           jobStatus=(r[9]||'').trim(), recruitGroup=r[29]||'', beerType=normalizeBeerType(r[23]||''),
-          azDate = parseDMY(r[51]);
+          azDate = parseDMY(r[51]), vacancyDateBB = parseFlexibleDate(r[53], false), startDateBA = parseFlexibleDate(r[52], false);
     if(!storeCode) return null;
     if(area) recruitStoreAreaMap.set(storeCode, area);
     if(rawArea) recruitStoreRawAreaMap.set(storeCode, rawArea);
     if(r[23]) recruitBeerTypeMap.set(storeCode, beerType);
     recruitStoreCodeSet.add(storeCode);
-    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, azDate, hadBE: storeCodeSet.has(storeCode) };
+    return { area, rawArea, storeCode, storeName, jobStatus, recruitGroup, beerType, azDate, vacancyDateBB, startDateBA, hadBE: storeCodeSet.has(storeCode) };
   }).filter(Boolean);
 
   const chosenByStore = new Map();
@@ -746,30 +746,18 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
 const fillSortState = { key:'days', dir:-1 };
 const fillCleanSortState = { key:'days', dir:-1 };
 function computeFillTimeRows(){
-  const byStore = new Map();
-  window.__recruit.forEach(x=>{
-    if(!byStore.has(x.storeCode)) byStore.set(x.storeCode, []);
-    byStore.get(x.storeCode).push(x);
-  });
-
   const today = new Date();
   today.setHours(0,0,0,0);
   let rows = [];
-  byStore.forEach((recruitRows, storeCode)=>{
-    if(!recruitStoreCodeSet.has(storeCode)) return;
-    const azDate = recruitRows.map(x=>x.azDate).find(d=>d) || null;
-    const masterDate = masterBEResignDateMap.get(storeCode) || null;
-    let vacancyDate = azDate;
-    if(masterDate && (!vacancyDate || masterDate > vacancyDate)) vacancyDate = masterDate;
+  window.__recruit.forEach(x=>{
+    if(!recruitStoreCodeSet.has(x.storeCode)) return;
+    const vacancyDate = x.vacancyDateBB || x.azDate;
     if(!vacancyDate) return;
-    const startDateQueue = [...(masterBEStartDateMap.get(storeCode) || [])];
-    recruitRows.forEach(x=>{
-      const startDate = startDateQueue.length ? startDateQueue.shift() : null;
-      const days = startDate
-        ? Math.round((startDate - vacancyDate) / 86400000)
-        : Math.round((today - vacancyDate) / 86400000);
-      rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate, startDate, days });
-    });
+    const startDate = x.startDateBA || null;
+    const days = startDate
+      ? Math.round((startDate - vacancyDate) / 86400000)
+      : Math.round((today - vacancyDate) / 86400000);
+    rows.push({ storeCode:x.storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate, startDate, days });
   });
   return rows;
 }
