@@ -123,6 +123,7 @@
       <button class="tab-btn active" data-page="page1">1. ร้านค้าทั้งหมด</button>
       <button class="tab-btn" data-page="page2">2. การลาออก (2026)</button>
       <button class="tab-btn" data-page="page3">3. สรรหา</button>
+      <button class="tab-btn" data-page="page4">4. สรรหา (ไม่รวมค่าติดลบ)</button>
     </div>
 
     <!-- ================= PAGE 1 ================= -->
@@ -383,6 +384,43 @@
               <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
             </tr></thead>
             <tbody id="fillBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PAGE 4 ================= -->
+    <div class="page" id="page4">
+      <div class="kpi-grid">
+        <div class="kpi warn">
+          <div class="num" id="kpiFillCleanAvg">–</div>
+          <div class="label">จำนวนวันสรรหาเฉลี่ย (วัน)</div>
+        </div>
+        <div class="kpi">
+          <div class="num" id="kpiFillCleanMin">–</div>
+          <div class="label">ต่ำสุด (วัน)</div>
+        </div>
+        <div class="kpi warn">
+          <div class="num" id="kpiFillCleanMax">–</div>
+          <div class="label">สูงสุด (วัน)</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>ระยะเวลาการเติม BE แต่ละร้าน (ไม่รวมค่าติดลบ)</h2>
+        <p class="desc">
+          เหมือนหน้า "3. สรรหา" ทุกอย่าง แต่ตัดรายการที่ระยะเวลาติดลบออก (กรณีข้อมูลจับคู่ผิดพลาด ทำให้วันเริ่มงานมาก่อนวันตำแหน่งว่าง) เหลือเฉพาะรายการที่ระยะเวลาเป็น 0 วันขึ้นไป
+        </p>
+        <div class="controls">
+          <input type="text" id="fillCleanSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
+          <span class="count-pill" id="fillCleanCount"></span>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr id="fillCleanHeadRow">
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
+            </tr></thead>
+            <tbody id="fillCleanBody"></tbody>
           </table>
         </div>
       </div>
@@ -702,12 +740,12 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   renderStoreMonthlyChart();
   populateFilters();
   renderFillTimeReport();
+  renderFillTimeReportClean();
 }
 
 const fillSortState = { key:'days', dir:-1 };
-function renderFillTimeReport(){
-  const search = document.getElementById('fillSearch').value.trim().toLowerCase();
-
+const fillCleanSortState = { key:'days', dir:-1 };
+function computeFillTimeRows(){
   const byStore = new Map();
   window.__recruit.forEach(x=>{
     if(!byStore.has(x.storeCode)) byStore.set(x.storeCode, []);
@@ -733,20 +771,28 @@ function renderFillTimeReport(){
       rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate, startDate, days });
     });
   });
+  return rows;
+}
+
+const fillAccessors = {
+  storeCode:x=>x.storeCode||'', storeName:x=>x.storeName||'', area:x=>x.area||'', rawArea:x=>x.rawArea||'',
+  vacancyDate:x=>x.vacancyDate?x.vacancyDate.getTime():0, startDate:x=>x.startDate?x.startDate.getTime():0, days:x=>x.days
+};
+
+function renderFillTable(ids, sortState, excludeNegative){
+  const search = document.getElementById(ids.search).value.trim().toLowerCase();
+  let rows = computeFillTimeRows();
+  if(excludeNegative) rows = rows.filter(x=>x.days >= 0);
 
   if(search) rows = rows.filter(x=>
     (x.storeName||'').toLowerCase().includes(search) || (x.storeCode||'').toLowerCase().includes(search)
   );
 
-  const fillAccessors = {
-    storeCode:x=>x.storeCode||'', storeName:x=>x.storeName||'', area:x=>x.area||'', rawArea:x=>x.rawArea||'',
-    vacancyDate:x=>x.vacancyDate?x.vacancyDate.getTime():0, startDate:x=>x.startDate?x.startDate.getTime():0, days:x=>x.days
-  };
-  rows = applySort(rows, fillSortState, fillAccessors);
-  attachSortableHeaders('fillHeadRow', fillSortState, renderFillTimeReport);
+  rows = applySort(rows, sortState, fillAccessors);
+  attachSortableHeaders(ids.headRow, sortState, ()=>renderFillTable(ids, sortState, excludeNegative));
 
-  document.getElementById('fillCount').textContent = `แสดง ${rows.length.toLocaleString()} รายการ`;
-  document.getElementById('fillBody').innerHTML = rows.map(x=>`
+  document.getElementById(ids.count).textContent = `แสดง ${rows.length.toLocaleString()} รายการ`;
+  document.getElementById(ids.body).innerHTML = rows.map(x=>`
     <tr>
       <td>${x.storeCode}</td>
       <td>${x.storeName||'-'}</td>
@@ -760,14 +806,28 @@ function renderFillTimeReport(){
   const allDays = rows.map(x=>x.days).sort((a,b)=>a-b);
   if(allDays.length){
     const avg = allDays.reduce((a,b)=>a+b,0)/allDays.length;
-    document.getElementById('kpiFillAvg').textContent = avg.toFixed(1);
-    document.getElementById('kpiFillMin').textContent = allDays[0].toLocaleString();
-    document.getElementById('kpiFillMax').textContent = allDays[allDays.length-1].toLocaleString();
+    document.getElementById(ids.avg).textContent = avg.toFixed(1);
+    document.getElementById(ids.min).textContent = allDays[0].toLocaleString();
+    document.getElementById(ids.max).textContent = allDays[allDays.length-1].toLocaleString();
   } else {
-    document.getElementById('kpiFillAvg').textContent = '-';
-    document.getElementById('kpiFillMin').textContent = '-';
-    document.getElementById('kpiFillMax').textContent = '-';
+    document.getElementById(ids.avg).textContent = '-';
+    document.getElementById(ids.min).textContent = '-';
+    document.getElementById(ids.max).textContent = '-';
   }
+}
+
+function renderFillTimeReport(){
+  renderFillTable({
+    search:'fillSearch', headRow:'fillHeadRow', count:'fillCount', body:'fillBody',
+    avg:'kpiFillAvg', min:'kpiFillMin', max:'kpiFillMax'
+  }, fillSortState, false);
+}
+
+function renderFillTimeReportClean(){
+  renderFillTable({
+    search:'fillCleanSearch', headRow:'fillCleanHeadRow', count:'fillCleanCount', body:'fillCleanBody',
+    avg:'kpiFillCleanAvg', min:'kpiFillCleanMin', max:'kpiFillCleanMax'
+  }, fillCleanSortState, true);
 }
 
 function renderPage1KPIs(){
@@ -1655,6 +1715,7 @@ document.getElementById('scopeFilterSeg').addEventListener('click', e=>{
 });
 document.getElementById('searchStore').addEventListener('input', renderReport1);
 document.getElementById('fillSearch').addEventListener('input', renderFillTimeReport);
+document.getElementById('fillCleanSearch').addEventListener('input', renderFillTimeReportClean);
 document.getElementById('recruitGroupFilter').addEventListener('change', e=>{ recruitGroupFilterVal = e.target.value; renderReport1(); });
 document.getElementById('report1ZoneFilter').addEventListener('change', e=>{ report1ZoneVal = e.target.value; renderReport1(); });
 document.getElementById('report1AreaFilter').addEventListener('change', e=>{ report1AreaVal = e.target.value; renderReport1(); });
