@@ -381,7 +381,7 @@
         <div class="tablewrap">
           <table>
             <thead><tr id="fillHeadRow">
-              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="jobStatus">สถานะ</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
             </tr></thead>
             <tbody id="fillBody"></tbody>
           </table>
@@ -418,7 +418,7 @@
         <div class="tablewrap">
           <table>
             <thead><tr id="fillCleanHeadRow">
-              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="jobStatus">สถานะ</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
             </tr></thead>
             <tbody id="fillCleanBody"></tbody>
           </table>
@@ -757,13 +757,13 @@ function computeFillTimeRows(){
     const days = startDate
       ? Math.round((startDate - vacancyDate) / 86400000)
       : Math.round((today - vacancyDate) / 86400000);
-    rows.push({ storeCode:x.storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate, startDate, days });
+    rows.push({ storeCode:x.storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, jobStatus:x.jobStatus, vacancyDate, startDate, days });
   });
   return rows;
 }
 
 const fillAccessors = {
-  storeCode:x=>x.storeCode||'', storeName:x=>x.storeName||'', area:x=>x.area||'', rawArea:x=>x.rawArea||'',
+  storeCode:x=>x.storeCode||'', storeName:x=>x.storeName||'', area:x=>x.area||'', rawArea:x=>x.rawArea||'', jobStatus:x=>x.jobStatus||'',
   vacancyDate:x=>x.vacancyDate?x.vacancyDate.getTime():0, startDate:x=>x.startDate?x.startDate.getTime():0, days:x=>x.days
 };
 
@@ -786,6 +786,7 @@ function renderFillTable(ids, sortState, excludeNegative){
       <td>${x.storeName||'-'}</td>
       <td>${x.area||'-'}</td>
       <td>${x.rawArea||'-'}</td>
+      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
       <td>${fmtDate(x.vacancyDate)}</td>
       <td>${x.startDate ? fmtDate(x.startDate) : '-'}</td>
       <td style="font-weight:600;">${x.days}</td>
