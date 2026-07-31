@@ -374,7 +374,7 @@
         <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <p class="desc">
           วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
-          เทียบกับวันเริ่มงานจริงของพนักงานคนล่าสุดที่เข้าร้านนั้นจากชีต "master_BE" (คอลัมน์ H ถ้าไม่มีเช็คคอลัมน์ J) จับคู่กันด้วยรหัสร้าน —
+          เทียบกับวันเริ่มงานจริงจากชีต "master_BE" — ใช้แถวแรกที่สถานะ (คอลัมน์ C) เป็น "ทำงานอยู่" ของร้านนั้น แล้วดึงวันที่จากคอลัมน์ H (ถ้าไม่มีเช็คคอลัมน์ J) จับคู่กันด้วยรหัสร้าน —
           แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น ร้านอื่นนอกเหนือจากนี้จะไม่แสดง — และแสดงเฉพาะรายการที่มีข้อมูลครบทั้งสองฝั่งด้วย — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ จับคู่กับวันเริ่มงานคนละคนกัน
         </p>
         <div class="controls">
@@ -648,13 +648,13 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   masterBEStartDateMap = new Map();
   masterRows.forEach(r=>{
     if(!r) return;
+    const status = (r[2]||'').trim();
+    if(status !== 'ทำงานอยู่') return;
     const storeCode = (r[11]||'').trim();
     const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
     if(!storeCode || !startDate) return;
-    if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, []);
-    masterBEStartDateMap.get(storeCode).push(startDate);
+    if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, startDate);
   });
-  masterBEStartDateMap.forEach(list=> list.sort((a,b)=>a-b));
 
   resigned2026 = [...empMap.values()].filter(e=>
     e.status === 'ลาออก' && e.lastDate && e.lastDate.getFullYear() === 2026
@@ -700,12 +700,11 @@ function renderFillTimeReport(){
   let rows = [];
   byStore.forEach((recruitRows, storeCode)=>{
     if(!recruitStoreCodeSet.has(storeCode)) return;
-    const candidates = masterBEStartDateMap.get(storeCode) || [];
-    if(!candidates.length) return;
-    const latestStartDate = candidates[candidates.length-1];
+    const startDate = masterBEStartDateMap.get(storeCode);
+    if(!startDate) return;
     recruitRows.forEach(x=>{
-      const days = Math.round((latestStartDate - x.vacancyDate) / 86400000);
-      rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate:x.vacancyDate, startDate:latestStartDate, days });
+      const days = Math.round((startDate - x.vacancyDate) / 86400000);
+      rows.push({ storeCode, storeName:x.storeName, area:x.area, rawArea:x.rawArea, vacancyDate:x.vacancyDate, startDate, days });
     });
   });
 
