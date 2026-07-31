@@ -76,6 +76,7 @@
   .badge.yes{background:var(--green-soft);color:var(--teal-dark);}
   .badge.no{background:var(--red-soft);color:var(--red);}
   .badge.status{background:var(--amber-soft);color:var(--amber);}
+  .badge.status.waiting{background:var(--green-soft);color:var(--teal-dark);}
   .tablewrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
   .tablewrap thead th{position:sticky;top:0;background:var(--panel);z-index:1;}
 
@@ -494,6 +495,11 @@ function fmtDate(dt){
   const mm = String(dt.getMonth()+1).padStart(2,'0');
   return `${dd}/${mm}/${dt.getFullYear()}`;
 }
+  function statusBadge(status){
+  const s = status||'-';
+  const cls = (s.includes('รอเริ่ม') || s.includes('ทำงานอยู่')) ? 'badge status waiting' : 'badge status';
+  return `<span class="${cls}">${s}</span>`;
+}
 
 let jsonpCounter = 0;
 function fetchGviz(gid){
@@ -773,7 +779,7 @@ function renderFillTable(ids, sortState, excludeNegative){
       <td>${x.storeName||'-'}</td>
       <td>${x.area||'-'}</td>
       <td>${x.rawArea||'-'}</td>
-      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${statusBadge(x.jobStatus)}</td>
       <td>${fmtDate(x.vacancyDate)}</td>
       <td>${x.startDate ? fmtDate(x.startDate) : '-'}</td>
       <td style="font-weight:600;">${x.days}</td>
@@ -1038,7 +1044,7 @@ function renderAreaDetailTable(){
       <td>${x.rawArea||'-'}</td>
       <td>${beerTypeOf(x.storeCode)}</td>
       <td>${storeTypeOf(x.storeCode)}</td>
-      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${statusBadge(x.jobStatus)}</td>
       <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
       <td>${n > 0 ? `<span class="badge no">${n}</span>` : '<span style="color:var(--ink-soft);">0</span>'}</td>
     </tr>`;
@@ -1101,7 +1107,7 @@ function renderTypeDetailTable(){
       <td>${x.code}</td>
       <td>${x.storeName}</td>
       <td>${x.area}</td>
-      <td><span class="badge status">${x.jobStatus}</span></td>
+      <td>${statusBadge(x.jobStatus)}</td>
       <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
       <td><span class="badge no">${x.count}</span></td>
     </tr>`).join('');
@@ -1206,7 +1212,7 @@ function renderCombinedDetailTable(){
       <td>${x.area||'-'}</td>
       <td>${x.rawArea||'-'}</td>
       <td>${beerTypeOf(x.storeCode)}</td>
-      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${statusBadge(x.jobStatus)}</td>
       <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
       <td>${n > 0 ? `<span class="badge no">${n}</span>` : '<span style="color:var(--ink-soft);">0</span>'}</td>
     </tr>`;
@@ -1318,7 +1324,7 @@ function renderReport1(){
       <td>${x.storeName||'-'}</td>
       <td>${beerTypeOf(x.storeCode)}</td>
       <td>${storeTypeOf(x.storeCode)}</td>
-      <td><span class="badge status">${x.jobStatus||'-'}</span></td>
+      <td>${statusBadge(x.jobStatus)}</td>
       <td>${x.recruitGroup||'-'}</td>
       <td>${x.hadBE ? '<span class="badge yes">เคยมี</span>' : '<span class="badge no">ไม่เคยมี</span>'}</td>
     </tr>`).join('');
