@@ -374,8 +374,8 @@
         <h2>ระยะเวลาการเติม BE แต่ละร้าน</h2>
         <p class="desc">
           วันที่ตำแหน่งว่าง: ใช้คอลัมน์ AA จากชีต "ร้านที่ต้องสรรหา" — ถ้าว่างใช้คอลัมน์ AZ แทน
-          เทียบกับวันนัดเริ่มงานจริงจากชีต "รายชื่อ-BE-HR" (คอลัมน์ R) จับคู่กันด้วยรหัสร้าน —
-          แสดงเฉพาะรายการที่มีข้อมูลครบทั้งสองฝั่งเท่านั้น — ถ้าร้านไหนมี 2 แถวในชีต "ร้านที่ต้องสรรหา" (ต้องการ BE 2 คน) จะนับแยก 2 รายการ จับคู่กับวันเริ่มงานคนละคนกัน
+          เทียบกับวันเริ่มงานจริงจากชีต "master_BE" (คอลัมน์ H ถ้าไม่มีเช็คคอลัมน์ J) จับคู่กันด้วยรหัสร้าน —
+          แสดงเฉพาะร้านที่มีรายชื่ออยู่ในชีต "ร้านที่ต้องสรรหา" เท่านั้น ร้านอื่นนอกเหนือจากนี้จะไม่แสดง — และแสดงเฉพาะรายการที่มีข้อมูลครบทั้งสองฝั่งด้วย — ถ้าร้านไหนมี 2 แถวในชีตนั้น (ต้องการ BE 2 คน) จะนับแยก 2 รายการ จับคู่กับวันเริ่มงานคนละคนกัน
         </p>
         <div class="controls">
           <input type="text" id="fillSearch" placeholder="ค้นหาชื่อร้าน / รหัสร้าน...">
@@ -384,7 +384,7 @@
         <div class="tablewrap">
           <table>
             <thead><tr id="fillHeadRow">
-              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันนัดเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
+              <th data-sort="storeCode">รหัสร้าน</th><th data-sort="storeName">ชื่อร้าน</th><th data-sort="area">โซน</th><th data-sort="rawArea">พื้นที่</th><th data-sort="vacancyDate">วันที่ตำแหน่งว่าง</th><th data-sort="startDate">วันเริ่มงาน</th><th data-sort="days">ระยะเวลาเติม BE (วัน)</th>
             </tr></thead>
             <tbody id="fillBody"></tbody>
           </table>
@@ -406,6 +406,7 @@ const SPREADSHEET_ID = "1zYZFaFEups9XDVs2yw_ve4E0JNPCEKalnt8yh-_rwV0";
 const GID_BE_ALL = "812175426";
 const GID_RECRUIT = "140398926";
 const GID_HR = "748651713";
+const GID_MASTER = "0";
 
 let empMap = new Map();
 let storeCodeSet = new Set();
@@ -415,6 +416,7 @@ let recruitStoreRawAreaMap = new Map();
 let recruitStoreCodeSet = new Set();
 let recruitBeerTypeMap = new Map();
 let hrStartDateMap = new Map();
+let masterBEStartDateMap = new Map();
 let resigned2026 = [];
 
 const statusDot = document.getElementById('statusDot');
@@ -566,10 +568,11 @@ function dedupeRows(rows){
   return out;
 }
 
-function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw){
+function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw, masterRowsRaw){
   const beAllRows = dedupeRows(beAllRowsRaw);
   const recruitRows = dedupeRows(recruitRowsRaw);
   const hrRows = dedupeRows(hrRowsRaw || []);
+  const masterRows = dedupeRows(masterRowsRaw || []);
   empMap = new Map();
   storeCodeSet = new Set();
   storeTypeProvinceMap = new Map();
@@ -642,6 +645,17 @@ function processData(beAllRowsRaw, recruitRowsRaw, hrRowsRaw){
   });
   hrStartDateMap.forEach(list=> list.sort((a,b)=>a-b));
 
+  masterBEStartDateMap = new Map();
+  masterRows.forEach(r=>{
+    if(!r) return;
+    const storeCode = (r[11]||'').trim();
+    const startDate = parseFlexibleDate(r[7], false) || parseFlexibleDate(r[9], false);
+    if(!storeCode || !startDate) return;
+    if(!masterBEStartDateMap.has(storeCode)) masterBEStartDateMap.set(storeCode, []);
+    masterBEStartDateMap.get(storeCode).push(startDate);
+  });
+  masterBEStartDateMap.forEach(list=> list.sort((a,b)=>a-b));
+
   resigned2026 = [...empMap.values()].filter(e=>
     e.status === 'ลาออก' && e.lastDate && e.lastDate.getFullYear() === 2026
   ).map(e=>{
@@ -685,8 +699,9 @@ function renderFillTimeReport(){
 
   let rows = [];
   byStore.forEach((recruitRows, storeCode)=>{
+    if(!recruitStoreCodeSet.has(storeCode)) return;
     const sortedRecruit = [...recruitRows].sort((a,b)=> a.vacancyDate - b.vacancyDate);
-    const candidates = [...(hrStartDateMap.get(storeCode) || [])];
+    const candidates = [...(masterBEStartDateMap.get(storeCode) || [])];
     sortedRecruit.forEach(x=>{
       if(!candidates.length) return;
       let idx = candidates.findIndex(d=> d >= x.vacancyDate);
@@ -1670,8 +1685,8 @@ async function loadAll(){
   errorBox.style.display = 'none';
   content.style.display = 'none';
   try{
-    const [beAllRows, recruitRows, hrRows] = await Promise.all([fetchGviz(GID_BE_ALL), fetchGviz(GID_RECRUIT), fetchGviz(GID_HR)]);
-    processData(beAllRows, recruitRows, hrRows);
+    const [beAllRows, recruitRows, hrRows, masterRows] = await Promise.all([fetchGviz(GID_BE_ALL), fetchGviz(GID_RECRUIT), fetchGviz(GID_HR), fetchGviz(GID_MASTER)]);
+    processData(beAllRows, recruitRows, hrRows, masterRows);
     loadingBox.style.display = 'none';
     content.style.display = 'block';
     statusDot.className = 'dot live';
