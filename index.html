@@ -234,7 +234,7 @@
 
       <div class="panel" id="areaMonthPanel" style="display:none;">
         <h2 id="areaMonthTitle">การลาออกแยกพื้นที่ ตามเดือน + อัตราลาออกต่อร้าน</h2>
-        <p class="desc">แสดงเมื่อเลือกโซนแล้วเท่านั้น — แยกละเอียดระดับพื้นที่ภายในโซนที่เลือก คลิกชื่อพื้นที่เพื่อกรองข้อมูลทั้งหน้าต่อ <span id="rawAreaClearWrap" style="display:none;">— <button class="refresh" id="clearRawAreaBtn" style="padding:3px 10px;">✕ ล้างตัวกรองพื้นที่นี้</button></span></p>
+        <p class="desc">แสดงทุกโซนตามค่าเริ่มต้น — คลิกชื่อโซนในตารางด้านบนเพื่อกรองให้เหลือเฉพาะพื้นที่ในโซนนั้น คลิกชื่อพื้นที่เพื่อกรองข้อมูลทั้งหน้าต่อ <span id="rawAreaClearWrap" style="display:none;">— <button class="refresh" id="clearRawAreaBtn" style="padding:3px 10px;">✕ ล้างตัวกรองพื้นที่นี้</button></span></p>
         <div class="tablewrap" style="max-height:420px;">
           <table>
             <thead><tr id="areaMonthHeadRow"><th>พื้นที่</th></tr></thead>
@@ -1307,17 +1307,17 @@ const areaSortState = { key:'total', dir:-1 };
 
 function renderAreaMonthlyChart(){
   const panel = document.getElementById('areaMonthPanel');
-  if(areaFilterVal === 'ALL'){
-    panel.style.display = 'none';
-    return;
-  }
   panel.style.display = 'block';
-  document.getElementById('areaMonthTitle').textContent = `การลาออกแยกพื้นที่ ในโซน "${areaFilterVal}" ตามเดือน + อัตราลาออกต่อร้าน`;
+  const zoneOn = areaFilterVal !== 'ALL';
+  document.getElementById('areaMonthTitle').textContent = zoneOn
+    ? `การลาออกแยกพื้นที่ ในโซน "${areaFilterVal}" ตามเดือน + อัตราลาออกต่อร้าน`
+    : `การลาออกแยกพื้นที่ ตามเดือน + อัตราลาออกต่อร้าน (ทุกโซน)`;
 
-  const rows = getScopedResigned().filter(x=>x.area === areaFilterVal);
+  const rows = zoneOn ? getScopedResigned().filter(x=>x.area === areaFilterVal) : getScopedResigned();
+  const storeBase = zoneOn ? window.__recruitByStore.filter(x=>x.area === areaFilterVal) : window.__recruitByStore;
 
   const areaStoreCounts = new Map();
-  window.__recruitByStore.filter(x=>x.area === areaFilterVal).forEach(x=>{
+  storeBase.forEach(x=>{
     const area = x.rawArea || 'ไม่ระบุพื้นที่';
     areaStoreCounts.set(area, (areaStoreCounts.get(area)||0)+1);
   });
