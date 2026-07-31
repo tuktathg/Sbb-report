@@ -1399,22 +1399,24 @@ function renderStoreMonthlyChart(){
   });
 
   let storeSummaries = [...storeTotals.keys()].map(code=>({
-    code, name: storeNames.get(code) || '-', area: storeAreas.get(code) || '-', type: storeTypes.get(code) || '-', total: storeTotals.get(code) || 0
+    code, name: storeNames.get(code) || '-', area: storeAreas.get(code) || '-', type: storeTypes.get(code) || '-', total: storeTotals.get(code) || 0,
+    headcount: window.__recruit.filter(r=>r.storeCode===code).length
   }));
-  const storeAccessors = { name:x=>x.name||'', area:x=>x.area||'', type:x=>x.type||'', total:x=>x.total };
+  const storeAccessors = { name:x=>x.name||'', area:x=>x.area||'', type:x=>x.type||'', total:x=>x.total, headcount:x=>x.headcount };
   storeSummaries = applySort(storeSummaries, storeSortState, storeAccessors);
   const maxMonthCount = Math.max(1, ...storeSummaries.flatMap(s=> storeMonthCounts.get(s.code)||[]));
 
   const headRow = document.getElementById('storeMonthHeadRow');
-  headRow.innerHTML = '<th data-sort="name">ชื่อร้าน</th><th data-sort="area">พื้นที่</th><th data-sort="type">ประเภทร้าน</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th>';
+  headRow.innerHTML = '<th data-sort="name">ชื่อร้าน</th><th data-sort="area">พื้นที่</th><th data-sort="type">ประเภทร้าน</th><th data-sort="headcount">Headcount</th>' + MONTH_LABELS_SHORT.map(m=>`<th>${m}</th>`).join('') + '<th data-sort="total">total คนลาออก</th>';
   attachSortableHeaders('storeMonthHeadRow', storeSortState, renderStoreMonthlyChart);
 
-  document.getElementById('storeMonthBody').innerHTML = storeSummaries.map(({code,name,area,type,total})=>{
+  document.getElementById('storeMonthBody').innerHTML = storeSummaries.map(({code,name,area,type,total,headcount})=>{
     const counts = storeMonthCounts.get(code) || new Array(12).fill(0);
     return `<tr>
       <td>${name}</td>
       <td>${area}</td>
       <td>${type}</td>
+      <td>${headcount.toLocaleString()}</td>
       ${counts.map(c=>{
         const intensity = c/maxMonthCount;
         const bg = c>0 ? `rgba(201,121,12,${0.12 + intensity*0.55})` : 'transparent';
